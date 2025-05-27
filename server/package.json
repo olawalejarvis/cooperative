@@ -1,0 +1,30 @@
+{
+  "name": "cooperative-server",
+  "version": "1.0.0",
+  "description": "A simple Node.js Express application written in TypeScript.",
+  "main": "dist/app.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "dev": "ts-node src/app.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^4.17.1",
+    "pg": "^8.16.0",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.24"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13",
+    "@types/node": "^16.18.126",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/node-express-typescript-app.git"
+  },
+  "author": "Your Name",
+  "license": "MIT"
+}
