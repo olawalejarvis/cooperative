@@ -1,11 +1,14 @@
 import { Router } from 'express';
-import { IndexController } from '../controllers';
-
-const router = Router();
-const indexController = new IndexController();
+import { userRouter } from './UserRoute';
 
 export function setRoutes(app: Router) {
-    app.get('/', indexController.getIndex.bind(indexController));
-}
+    // default route
+    app.get('/', (req, res) => res.send('Hello, World!'));
 
-export default router;
+
+    // User routes
+    app.use('/v1/users', userRouter);
+
+
+    // Add more routes as needed
+}

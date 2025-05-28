@@ -1,7 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert, BeforeUpdate, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert, BeforeUpdate, OneToOne, JoinColumn, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { AppDataSource } from '../data-source';
 
-export type UserRole = 'user' | 'admin' | 'superadmin';
+export enum UserRole  {
+  USER = 'user',
+  ADMIN = 'admin',
+  SUPERADMIN = 'superadmin'
+}
+
 
 @Entity()
 export class User {
@@ -14,22 +20,25 @@ export class User {
   @Column({ name: 'last_name' })
   lastName!: string;
 
-  @Column({ unique: true })
-  email!: string;
+  @Column({ unique: true, nullable: true })
+  email?: string;
+
+  @Column({ name: 'phone_number', unique: true })
+  phoneNumber!: string;
 
   @Column({ name: 'user_name', unique: true, nullable: true })
-  userName!: string;
+  userName?: string;
 
   @Column({ name: 'password_hash' })
   passwordHash!: string;
 
   @Column({ name: 'is_active', default: true })
   isActive!: boolean;
-  
-  @Column({ name: 'is_admin', default: false })
-  isAdmin!: boolean;
 
-  @Column({ type: 'enum', enum: ['user', 'admin', 'superadmin'], default: 'user' })
+  @Column({ default: false })
+  deleted!: boolean;
+
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
   role!: UserRole;
 
   @Column({ name: 'last_login', nullable: true })
@@ -37,7 +46,7 @@ export class User {
 
   @OneToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'created_by' })
-  createdBy?: User;
+  createdBy!: User;
 
   @Column({ name: 'created_at' })
   createdAt!: string;
@@ -45,10 +54,17 @@ export class User {
   @Column({ name: 'updated_at' })
   updatedAt!: string;
 
-  
+
+  /**
+   * Transient properties
+   */
   // Transient property for plain password (not persisted)
   password!: string;
 
+
+  /**
+   * Hooks
+   */
   @BeforeInsert()
   beforeInsert() {
     const now = new Date().toISOString();
@@ -73,6 +89,7 @@ export class User {
     }
   }
 
+
   hashPassword() {
     this.passwordHash = bcrypt.hashSync(this.password, 10);
   }
@@ -86,3 +103,6 @@ export class User {
     return user;
   }
 }
+
+export const UserRepo = AppDataSource.getRepository(User);
+export type UserRepoType = Repository<User>;

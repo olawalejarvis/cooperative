@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, BeforeInsert, BeforeUpdate } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, BeforeInsert, BeforeUpdate, Repository } from 'typeorm';
 import { User } from './User';
+import { AppDataSource } from '../data-source';
 
 export enum UserTransactionStatus {
   PENDING = 'pending',
@@ -52,6 +53,9 @@ export class UserTransaction {
   @JoinColumn({ name: 'status_updated_by' })
   statusUpdatedBy?: User;
 
+  @Column({ default: false })
+  deleted!: boolean;
+
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'created_by' })
   createdBy?: User;
@@ -96,3 +100,6 @@ export class UserTransaction {
     this.updatedAt = now;
   }
 }
+
+export const UserTransactionRepo = AppDataSource.getRepository(UserTransaction);
+export type UserTransactionRepoType = Repository<UserTransaction>;

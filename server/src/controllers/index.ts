@@ -1,9 +1,3 @@
-import { Request, Response } from '../types';
+import { UserController } from './UserController';
 
-class IndexController {
-    public getIndex(req: Request, res: Response): void {
-        res.send('Hello, World!');
-    }
-}
-
-export { IndexController };
+export { UserController };
