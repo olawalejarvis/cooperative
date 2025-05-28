@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/app.js",
-    "dev": "ts-node src/app.ts"
+    "dev": "ts-node src/app.ts",
+    "seed": "ts-node src/database/seed.ts"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -16,6 +17,7 @@
     "pg": "^8.16.0",
     "reflect-metadata": "^0.2.2",
     "typeorm": "^0.3.24",
+    "typeorm-extension": "^3.7.1",
     "zod": "^3.25.32"
   },
   "devDependencies": {

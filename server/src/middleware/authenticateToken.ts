@@ -1,4 +1,4 @@
-import { UserRepo } from '../entity/User';
+import { UserRepo } from '../controllers/UserController';
 import { JwtTokenService } from '../services/JwtTokenService';
 import { Response, NextFunction, AuthRequest } from '../types';
 

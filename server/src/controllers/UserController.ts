@@ -1,7 +1,14 @@
 import { Request, Response, NextFunction, AuthRequest } from '../types';
-import { User, UserRepo } from '../entity/User';
+import { User } from '../entity/User';
 import { z } from 'zod';
 import { JwtTokenService } from '../services/JwtTokenService';
+import { AppDataSource } from '../database/data-source';
+import { Repository } from 'typeorm';
+
+
+export type UserRepoType = Repository<User>;
+export const UserRepo: UserRepoType = AppDataSource.getRepository(User);
+
 
 export const CreateUserSchema = z.object({
   firstName: z.string()

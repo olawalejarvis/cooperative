@@ -20,7 +20,7 @@ export class JwtTokenService {
 
   static verifyToken(token: string): JwtPayload | null {
     try {
-      const secret = process.env.SECRET as string;
+      const secret = process.env.JWT_SECRET as string;
       const decoded = jwt.verify(token, secret, { algorithms: ['HS256'] });
       
       if (typeof decoded === 'object' && 'userId' in decoded && 'userRole' in decoded) {

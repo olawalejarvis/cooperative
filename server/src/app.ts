@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import express from 'express';
-import { AppDataSource } from './data-source';
+import { AppDataSource } from './database/data-source';
 import { setRoutes } from './routes/index';
 import { User } from './entity/User';
 import * as dotenv from 'dotenv';

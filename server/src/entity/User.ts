@@ -1,6 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert, BeforeUpdate, OneToOne, JoinColumn, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { AppDataSource } from '../data-source';
 
 export enum UserRole  {
   USER = 'user',
@@ -9,7 +8,7 @@ export enum UserRole  {
 }
 
 
-@Entity()
+@Entity({ name: 'user' })
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -91,7 +90,7 @@ export class User {
 
 
   hashPassword() {
-    this.passwordHash = bcrypt.hashSync(this.password, 10);
+    this.passwordHash = bcrypt.hashSync(this.password, bcrypt.genSaltSync(10));
   }
 
   isValidPassword(password: string): boolean {
@@ -103,6 +102,3 @@ export class User {
     return user;
   }
 }
-
-export const UserRepo = AppDataSource.getRepository(User);
-export type UserRepoType = Repository<User>;
