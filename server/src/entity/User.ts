@@ -1,10 +1,12 @@
 import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert, BeforeUpdate, OneToOne, JoinColumn, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { Organization } from './Organization';
 
 export enum UserRole  {
   USER = 'user',
   ADMIN = 'admin',
-  SUPERADMIN = 'superadmin'
+  SUPERADMIN = 'superadmin',
+  ROOT_USER = 'root_user'
 }
 
 
@@ -46,6 +48,10 @@ export class User {
   @OneToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'created_by' })
   createdBy!: User;
+
+  @OneToOne(() => Organization, { nullable: true })
+  @JoinColumn({ name: 'organization_id' })
+  organization?: Organization;
 
   @Column({ name: 'created_at' })
   createdAt!: string;

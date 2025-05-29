@@ -5,6 +5,7 @@ import { setRoutes } from './routes/index';
 import { User } from './entity/User';
 import * as dotenv from 'dotenv';
 import { getLogger } from './services/logger';
+import { responseErrorInterceptor } from './middleware/responseErrorInterceptor';
 
 dotenv.config();
 
@@ -24,6 +25,9 @@ app.get('/users', async (req, res) => {
   const users = await AppDataSource.getRepository(User).find();
   res.json(users);
 });
+
+// Add error-handling middleware as the last middleware
+app.use(responseErrorInterceptor);
 
 // Initialize TypeORM and start server
 AppDataSource.initialize()
