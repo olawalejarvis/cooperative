@@ -59,6 +59,9 @@ export class User {
   @Column({ name: 'updated_at' })
   updatedAt!: string;
 
+  @Column({ name: 'token', nullable: true })
+  token?: string;
+
 
   /**
    * Transient properties
@@ -104,7 +107,7 @@ export class User {
   }
 
   toJSON() {
-    const { passwordHash, ...user } = this;
+    const { passwordHash, token, ...user } = this;
     return user;
   }
 }

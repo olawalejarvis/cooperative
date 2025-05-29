@@ -56,6 +56,7 @@ export class UserController {
           { phoneNumber: username, isActive: true, deleted: false },
           { userName: username, isActive: true, deleted: false },
         ],
+        relations: ['organization']
       });
 
       if (!user) {
@@ -69,10 +70,11 @@ export class UserController {
       }
       
       // Generate JWT token
-      const token = JwtTokenService.generateToken(user.id, user.role);
+      const token = JwtTokenService.generateToken(user.id, user.role, user.organization?.id);
 
-      // Update last login time
+      // Update last login time and save token to user
       user.lastLogin = new Date().toISOString();
+      user.token = token;
       await UserRepo.save(user);
       
       // Set token in httpOnly cookie
@@ -87,8 +89,16 @@ export class UserController {
     }
   }
 
-  logoutUser = async (req: Request, res: Response, next: NextFunction) => {
+  logoutUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
+      // Clear token in user table
+      if (req.user && req.user.userId) {
+        const user = await UserRepo.findOne({ where: { id: req.user.userId } });
+        if (user) {
+          user.token = undefined;
+          await UserRepo.save(user);
+        }
+      }
       JwtTokenService.clearToken(res)
       logger.info('User logged out');
       return res.status(200).json({ message: 'Logout successful' });
@@ -105,7 +115,7 @@ export class UserController {
         logger.warn('Unauthorized access to getMe');
         return res.status(401).json({ error: 'Unauthorized' });
       }
-      const user = await UserRepo.findOne({ where: { id: userId }, relations: ['organization', 'createdBya'] });
+      const user = await UserRepo.findOne({ where: { id: userId }, relations: ['organization', 'createdBy'] });
       if (!user) {
         logger.warn('User not found in getMe');
         return res.status(404).json({ error: 'User not found' });
@@ -131,7 +141,7 @@ export class UserController {
       const query: SearchUsersQuery = parseResult.data
       
       // Call UserService for search logic
-      const result = await UserService.searchUsers(query);
+      const result = await UserService.searchUsers(query, req.user);
       logger.info('searchUsers executed');
       return res.status(200).json(result);
     } catch (err) {

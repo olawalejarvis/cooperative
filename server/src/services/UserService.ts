@@ -1,4 +1,5 @@
 import { UserRepo } from '../controllers/UserController';
+import { JwtPayload } from './JwtTokenService';
 
 export interface UserSearchResult {
   users: any[]; // Replace with actual User type
@@ -22,7 +23,7 @@ export interface SearchUsersQuery {
 
 
 export class UserService {
-  static async searchUsers(params: SearchUsersQuery): Promise<UserSearchResult> {
+  static async searchUsers(params: SearchUsersQuery, currentUser?: JwtPayload): Promise<UserSearchResult> {
     const skip = (params.page - 1) * params.limit;
 
     const qb = UserRepo.createQueryBuilder('user');
@@ -47,6 +48,10 @@ export class UserService {
     }
     if (params.createdBy) {
       qb.andWhere('user.createdBy = :createdBy', { createdBy: params.createdBy });
+    }
+
+    if (currentUser?.userRole !== 'root_user') {
+      qb.andWhere('user.organization = :organizationId', { organizationId: currentUser?.orgId });
     }
 
     qb.orderBy(`user.${params.sortBy}`, params.sortOrder.toUpperCase() as 'ASC' | 'DESC')

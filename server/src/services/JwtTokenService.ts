@@ -1,17 +1,23 @@
 import jwt, { Algorithm, SignOptions } from 'jsonwebtoken';
+import { getLogger } from './logger';
 
 export interface JwtPayload {
   userId: string;
   userRole: string;
+  orgId?: string;
 }
+
+const logger = getLogger('services/JwtTokenService');
 
 /**
  * Service for handling JWT tokens.
  * Provides methods to generate, verify, and manage JWT tokens.
  */
 export class JwtTokenService {
-  static generateToken(userId: string, userRole: string): string {
-    const payload = { userId, userRole };
+
+  static generateToken(userId: string, userRole: string, orgId?: string): string {
+    const payload = { userId, userRole, orgId };
+    logger.info(`Generating JWT with payload: ${JSON.stringify(payload)}`);
     const secret = process.env.JWT_SECRET as string;
     const options: SignOptions = { algorithm: 'HS256' as Algorithm, expiresIn: '1d' }; // Token expires in 1 day
 
@@ -22,8 +28,10 @@ export class JwtTokenService {
     try {
       const secret = process.env.JWT_SECRET as string;
       const decoded = jwt.verify(token, secret, { algorithms: ['HS256'] });
+
+      logger.info(`Decoded JWT: ${JSON.stringify(decoded)}`);
       
-      if (typeof decoded === 'object' && 'userId' in decoded && 'userRole' in decoded) {
+      if (typeof decoded === 'object' && 'userId' in decoded && 'userRole' in decoded && 'orgId' in decoded) {
         return decoded as JwtPayload; // Return the decoded payload if it matches the expected structure
       }
       return null;
