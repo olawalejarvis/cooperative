@@ -19,23 +19,23 @@ export const AppDataSource = new DataSource({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   synchronize: true, // set to false in production
-  logging: false, // disable logging by default
-  
-  // Enable logging only if the environment variable is set
-  ...(process.env.DB_LOGGING === 'true' && { logging: true }),
-  
-  // Custom logger to handle query logging
-  logger: {
-    logQuery: (query: string, parameters?: any[]) => logger.info(`Query: ${query} -- Params: ${JSON.stringify(parameters)}`),
-    logQueryError: (error: string, query: string, parameters?: any[]) => logger.error(`QueryError: ${error} -- Query: ${query} -- Params: ${JSON.stringify(parameters)}`),
-    logQuerySlow: (time: number, query: string, parameters?: any[]) => logger.warn(`QuerySlow: ${time}ms -- Query: ${query} -- Params: ${JSON.stringify(parameters)}`),
-    logSchemaBuild: (message: string) => logger.info(`SchemaBuild: ${message}`),
-    logMigration: (message: string) => logger.info(`Migration: ${message}`),
-    log: (level: 'log' | 'info' | 'warn', message: any) => {
-      if (level === 'log' || level === 'info') logger.info(message);
-      else if (level === 'warn') logger.warn(message);
-    },
-  },
+  logging: false, // Always set logging to false to fully disable query logging
+  // Only attach custom logger if logging is enabled
+  ...(process.env.DB_LOGGING === 'true' && {
+    logging: true,
+    logger: {
+      logQuery: (query: string, parameters?: any[]) => logger.info(`Query: ${query} -- Params: ${JSON.stringify(parameters)}`),
+      logQueryError: (error: string, query: string, parameters?: any[]) => logger.error(`QueryError: ${error} -- Query: ${query} -- Params: ${JSON.stringify(parameters)}`),
+      logQuerySlow: (time: number, query: string, parameters?: any[]) => logger.warn(`QuerySlow: ${time}ms -- Query: ${query} -- Params: ${JSON.stringify(parameters)}`),
+      logSchemaBuild: (message: string) => logger.info(`SchemaBuild: ${message}`),
+      logMigration: (message: string) => logger.info(`Migration: ${message}`),
+      log: (level: 'log' | 'info' | 'warn', message: any) => {
+        if (level === 'log' || level === 'info') logger.info(message);
+        else if (level === 'warn') logger.warn(message);
+        else if (level === 'error') logger.error(message);
+      },
+    }
+  }),
   entities: [__dirname + '/../entity/*.ts'],
   migrations: [],
   subscribers: [],
