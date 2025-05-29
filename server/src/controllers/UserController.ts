@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction, AuthRequest } from '../types';
-import { User } from '../entity/User';
+import { User, UserRole } from '../entity/User';
+import { Organization } from '../entity/Organization';
 import { JwtTokenService } from '../services/JwtTokenService';
 import { AppDataSource } from '../database/data-source';
 import { Repository } from 'typeorm';
@@ -12,6 +13,8 @@ const logger = getLogger('controllers/UserController');
 
 export type UserRepoType = Repository<User>;
 export const UserRepo: UserRepoType = AppDataSource.getRepository(User);
+export type OrganizationRepoType = Repository<Organization>;
+export const OrganizationRepo: OrganizationRepoType = AppDataSource.getRepository(Organization);
 
 
 /**
@@ -19,20 +22,56 @@ export const UserRepo: UserRepoType = AppDataSource.getRepository(User);
  * logging in, logging out, fetching user details, and searching users.
  */
 export class UserController {
-  createUser = async (req: Request, res: Response, next: NextFunction) => {
+  createUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const parseResult = CreateUserSchema.safeParse(req.body);
       if (!parseResult.success) {
         logger.warn('Validation failed for createUser');
         return res.status(400).json({ error: parseResult.error.flatten() });
       }
-      const user = new User();
-      Object.assign(user, parseResult.data);
+      const { organizationId, ...userData } = parseResult.data;
 
+      // Check for existing user by email, username, or phone number
+      const orConditions = [];
+      if (userData.email) {
+        orConditions.push({ email: userData.email });
+      }
+      if (userData.userName) {
+        orConditions.push({ userName: userData.userName });
+      }
+      
+      // phoneNumber is mandatory, so it will always be present
+      orConditions.push({ phoneNumber: userData.phoneNumber });
+
+      const existingUser = await UserRepo.findOne({ where: orConditions });
+      if (existingUser) {
+        logger.warn(`Phone number, username or email already exists: ${existingUser.phoneNumber}, ${existingUser.userName}, ${existingUser.email}`);
+        return res.status(409).json({ error: `Phone number, username or email already exists: ${existingUser.phoneNumber}, ${existingUser.userName}, ${existingUser.email}` });
+      }
+
+      const organization = await OrganizationRepo.findOne({ where: { id: organizationId } });
+      if (!organization || organization.deleted || !organization.isActive) {
+        logger.warn(`Organization not found: ${organizationId}`);
+        return res.status(404).json({ error: 'Organization not found' });
+      }
+
+      if (req.user?.orgId != organization.id && req.user?.userRole !== UserRole.ROOT_USER) {
+        logger.warn(`Unauthorized access to create user in organization: ${organizationId}`);
+        return res.status(403).json({ error: 'Forbidden: You do not have permission to create users in this organization' });
+      }
+      
+      const user = new User();
+      Object.assign(user, userData);
+      
+      user.organization = organization;
+      if (req.user?.userId) {
+        user.createdBy = { id: req.user.userId } as User;
+      }
+      
       // Save user
       await UserRepo.save(user);
       logger.info(`User created: ${user.id}`);
-      return res.status(201).json({ message: 'User created successfully', user: user.toJSON() });
+      return res.status(201).json({ message: 'User created successfully' });
     } catch (err) {
       logger.error(`Error in createUser: ${err}`);
       next(err);

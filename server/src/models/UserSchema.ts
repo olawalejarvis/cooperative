@@ -24,6 +24,7 @@ export const CreateUserSchema = z.object({
     .min(8)
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/, 'Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.'),
   role: z.enum(['user', 'admin', 'superadmin']).optional(),
+  organizationId: z.string().uuid(),
 });
 
 export const LoginUserSchema = z.object({

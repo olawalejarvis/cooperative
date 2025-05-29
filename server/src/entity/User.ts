@@ -107,7 +107,7 @@ export class User {
   }
 
   toJSON() {
-    const { passwordHash, token, ...user } = this;
+    const { password, passwordHash, token, ...user } = this;
     return user;
   }
 }
