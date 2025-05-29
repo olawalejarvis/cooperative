@@ -7,5 +7,6 @@ const organizationRouter = Router();
 const organizationController = new OrganizationController();
 
 organizationRouter.post('/', authenticateToken, rootUserAuthorization, organizationController.createOrganization);
+organizationRouter.get('/', authenticateToken, rootUserAuthorization, organizationController.searchOrganizations);
 
 export { organizationRouter };
