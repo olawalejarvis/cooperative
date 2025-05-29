@@ -4,11 +4,13 @@ import { AppDataSource } from './database/data-source';
 import { setRoutes } from './routes/index';
 import { User } from './entity/User';
 import * as dotenv from 'dotenv';
+import { getLogger } from './services/logger';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const logger = getLogger('app');
 
 // Middleware
 app.use(express.json());
@@ -26,12 +28,12 @@ app.get('/users', async (req, res) => {
 // Initialize TypeORM and start server
 AppDataSource.initialize()
   .then(() => {
-    console.log('Data Source has been initialized!');
+    logger.info('Data Source has been initialized!');
 
     app.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}`);
+      logger.info(`Server is running on http://localhost:${PORT}`);
     });
   })
   .catch((err: unknown) => {
-    console.error('Error during Data Source initialization', err);
+    logger.error(`Error during Data Source initialization: ${err}`);
   });

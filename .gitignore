@@ -8,3 +8,6 @@
 
 # Ignore environment files
 /server/.env
+
+# Ignore log files
+/server/logs/

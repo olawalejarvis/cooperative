@@ -10,8 +10,7 @@ export enum UserTransactionStatus {
 export enum UserTransactionType {
   CASH_DEPOSIT = 'cash_deposit',
   TRANSFER_DEPOSIT = 'transfer_deposit',
-  CASH_WITHDRAWAL = 'cash_withdrawal',
-  TRANSFER_WITHDRAWAL = 'transfer_withdrawal',
+  PAYSTACK_DEPOSIT = 'paystack_deposit',
   MEMBERSHIP_PURCHASE = 'membership_purchase',
   SHARES_PURCHASE = 'shares_purchase'
 }

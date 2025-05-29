@@ -14,9 +14,9 @@ export async function authenticateToken(req: AuthRequest, res: Response, next: N
     }
     
     // Find user by ID from the decoded token
-    const user = await UserRepo.findOne({ where: { id: decoded.userId } });
-    if (!user || !user.isActive || user.deleted) {
-      // If user is not found or is inactive/deleted, return 401
+    const user = await UserRepo.findOne({ where: { id: decoded.userId, isActive: true, deleted: false } });
+    if (!user) {
+      // If user is not found return 401
       return res.status(401).json({ error: 'Invalid token.' });
     }
     

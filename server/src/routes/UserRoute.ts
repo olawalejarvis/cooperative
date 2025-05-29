@@ -9,6 +9,7 @@ userRouter.post('/', userController.createUser);
 userRouter.post('/login', userController.loginUser);
 userRouter.post('/logout', userController.logoutUser);
 userRouter.get('/me', authenticateToken, userController.getMe);
+userRouter.get('/', authenticateToken, userController.searchUsers);
 
 
 export { userRouter };
