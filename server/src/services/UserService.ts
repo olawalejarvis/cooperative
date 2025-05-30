@@ -1,4 +1,4 @@
-import { UserRepo } from '../controllers/UserController';
+import { UserRepo } from '../database/Repos';
 import { JwtPayload } from './JwtTokenService';
 
 export interface UserSearchResult {

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { userRouter } from './UserRoute';
 import { organizationRouter } from './OrganizationRoute';
+import { transactionRouter } from './UserTransactionRoute';
 
 export function setRoutes(app: Router) {
     // default route
@@ -9,6 +10,9 @@ export function setRoutes(app: Router) {
 
     // User routes
     app.use('/v1/users', userRouter);
+
+    // Transaction routes
+    app.use('/v1/transactions', transactionRouter);
 
 
     // Organization routes

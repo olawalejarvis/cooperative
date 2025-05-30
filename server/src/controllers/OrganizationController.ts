@@ -1,8 +1,7 @@
 import { AuthRequest, Response, NextFunction } from '../types';
-import { Organization } from '../entity/Organization';
-import { AppDataSource } from '../database/data-source';
 import { z } from 'zod';
 import { OrganizationService } from '../services/OrganizationService';
+import { OrganizationRepo } from '../database/Repos';
 
 export const CreateOrganizationSchema = z.object({
   name: z.string()
@@ -29,16 +28,15 @@ export class OrganizationController {
         return res.status(400).json({ error: parseResult.error.flatten() });
       }
       const { name } = parseResult.data;
-      const orgRepo = AppDataSource.getRepository(Organization);
-      const exists = await orgRepo.findOne({ where: { name } });
+      const exists = await OrganizationRepo.findOne({ where: { name } });
       if (exists) {
         return res.status(409).json({ error: 'Organization with this name already exists.' });
       }
-      const org = orgRepo.create({
+      const org = OrganizationRepo.create({
         name,
         createdBy: { id: req.user!.userId }
       });
-      await orgRepo.save(org);
+      await OrganizationRepo.save(org);
       return res.status(201).json({ message: 'Organization created successfully', organization: org });
     } catch (err) {
       next(err);

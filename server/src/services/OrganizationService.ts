@@ -1,5 +1,5 @@
 import { SearchOrganizationsQuery } from '../controllers/OrganizationController';
-import { AppDataSource } from '../database/data-source';
+import { OrganizationRepo } from '../database/Repos';
 import { Organization } from '../entity/Organization';
 
 export interface OrganizationSearchResult {
@@ -23,8 +23,7 @@ export class OrganizationService {
    */
   static async searchOrganizations(params: SearchOrganizationsQuery): Promise<OrganizationSearchResult> {
     const skip = (params.page - 1) * params.limit;
-    const orgRepo = AppDataSource.getRepository(Organization);
-    const qb = orgRepo.createQueryBuilder('organization');
+    const qb = OrganizationRepo.createQueryBuilder('organization');
     
     if (params.q) {
       qb.where('LOWER(organization.name) LIKE :q', { q: `%${params.q.toLowerCase()}%` });

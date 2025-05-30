@@ -1,18 +1,30 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, BeforeInsert, BeforeUpdate, Repository } from 'typeorm';
+import { 
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  BeforeInsert,
+  BeforeUpdate
+} from 'typeorm';
 import { User } from './User';
 
-export enum UserTransactionStatus {
+export enum TransactionStatus {
   PENDING = 'pending',
   APPROVED = 'approved',
   REJECTED = 'rejected',
 }
 
-export enum UserTransactionType {
-  CASH_DEPOSIT = 'cash_deposit',
-  TRANSFER_DEPOSIT = 'transfer_deposit',
-  PAYSTACK_DEPOSIT = 'paystack_deposit',
-  MEMBERSHIP_PURCHASE = 'membership_purchase',
-  SHARES_PURCHASE = 'shares_purchase'
+export enum TransactionMethod {
+  CASH = 'cash',
+  TRANSFER = 'transfer',
+  PAYSTACK = 'paystack',
+}
+
+export enum TransactionType {
+  SAVING_DEPOSIT = 'savings_deposit',
+  DIVIDEND_PAYMENT = 'dividend_payment',
 }
 
 export enum CurrencyType {
@@ -54,45 +66,53 @@ export class UserTransaction {
   @Column({ default: false })
   deleted!: boolean;
 
-  @ManyToOne(() => User, { nullable: true })
+  @ManyToOne(() => User, { nullable: false, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'created_by' })
   createdBy?: User;
 
   @Column({
     type: 'enum',
-    enum: UserTransactionType,
-    default: UserTransactionType.CASH_DEPOSIT,
+    enum: TransactionType,
+    default: TransactionType.SAVING_DEPOSIT,
   })
-  type!: UserTransactionType;
+  type!: TransactionType;
 
   @Column({
     type: 'enum',
-    enum: UserTransactionStatus,
-    default: UserTransactionStatus.PENDING,
+    enum: TransactionMethod,
+    default: TransactionMethod.CASH,
   })
-  status!: UserTransactionStatus;
+  method!: TransactionMethod;
 
-  @Column({ name: 'transaction_reference_id', default: '' })
+  @Column({
+    type: 'enum',
+    enum: TransactionStatus,
+    default: TransactionStatus.PENDING,
+  })
+  status!: TransactionStatus;
+
+  @Column({ name: 'reference_id', default: '' })
   referenceId!: string;
 
+  @Column({ name: 'description', type: 'text', nullable: true })
+  description?: string;
+
+  @Column({ name: 'receipt_url', nullable: true })
+  receiptUrl?: string;
+  
   
   @BeforeUpdate()
   beforeUpdate() {
-    // Prevent updating createdAt after insert
-    if (this.hasOwnProperty('createdAt')) {
-      delete (this as any).createdAt;
+    this.updatedAt = new Date();
+    
+    // Ensure createdBy is not modified
+    if (this.hasOwnProperty('createdBy')) {
+      delete (this as any).createdBy;
     }
   }
   
   @BeforeInsert()
   beforeInsert() {
-    if (
-      this.type === UserTransactionType.MEMBERSHIP_PURCHASE &&
-      parseFloat(this.amount) < 5000.0
-    ) {
-      throw new Error('Membership purchase amount must be at least 5000.0');
-    }
-
     const now = new Date();
     this.createdAt = now;
     this.updatedAt = now;

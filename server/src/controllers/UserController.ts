@@ -1,20 +1,12 @@
 import { Request, Response, NextFunction, AuthRequest } from '../types';
 import { User, UserRole } from '../entity/User';
-import { Organization } from '../entity/Organization';
 import { JwtTokenService } from '../services/JwtTokenService';
-import { AppDataSource } from '../database/data-source';
-import { Repository } from 'typeorm';
 import { SearchUsersQuery, UserService } from '../services/UserService';
 import { getLogger } from '../services/logger';
 import { CreateUserSchema, LoginUserSchema, SearchUsersQuerySchema } from '../models/UserSchema';
+import { OrganizationRepo, UserRepo } from '../database/Repos';
 
 const logger = getLogger('controllers/UserController');
-
-
-export type UserRepoType = Repository<User>;
-export const UserRepo: UserRepoType = AppDataSource.getRepository(User);
-export type OrganizationRepoType = Repository<Organization>;
-export const OrganizationRepo: OrganizationRepoType = AppDataSource.getRepository(Organization);
 
 
 /**
