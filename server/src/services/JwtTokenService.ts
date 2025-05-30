@@ -1,7 +1,7 @@
 import jwt, { Algorithm, SignOptions } from 'jsonwebtoken';
 import { getLogger } from './logger';
 
-export interface JwtPayload {
+export interface AuthUser {
   userId: string;
   userRole: string;
   orgId?: string;
@@ -24,7 +24,7 @@ export class JwtTokenService {
     return jwt.sign(payload, secret, options);
   }
 
-  static verifyToken(token: string): JwtPayload | null {
+  static verifyToken(token: string): AuthUser | null {
     try {
       const secret = process.env.JWT_SECRET as string;
       const decoded = jwt.verify(token, secret, { algorithms: ['HS256'] });
@@ -32,7 +32,7 @@ export class JwtTokenService {
       logger.info(`Decoded JWT: ${JSON.stringify(decoded)}`);
       
       if (typeof decoded === 'object' && 'userId' in decoded && 'userRole' in decoded && 'orgId' in decoded) {
-        return decoded as JwtPayload; // Return the decoded payload if it matches the expected structure
+        return decoded as AuthUser; // Return the decoded payload if it matches the expected structure
       }
       return null;
     } catch (error) {

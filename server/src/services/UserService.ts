@@ -1,12 +1,12 @@
 import { UserRepo } from '../database/Repos';
 import { UserRole } from '../entity/User';
 import { SearchUsersQuery } from '../models/UserSchema';
-import { JwtPayload } from './JwtTokenService';
+import { AuthUser } from './JwtTokenService';
 import { SearchResult } from './UserTransactionService';
 
 
 export class UserService {
-  static async searchUsers(params: SearchUsersQuery, currentUser?: JwtPayload, orgId?: string): Promise<SearchResult> {
+  static async searchUsers(params: SearchUsersQuery, currentUser?: AuthUser, orgId?: string): Promise<SearchResult> {
     const skip = (params.page - 1) * params.limit;
 
     const qb = UserRepo.createQueryBuilder('user');
