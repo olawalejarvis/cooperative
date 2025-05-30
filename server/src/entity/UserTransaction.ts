@@ -117,5 +117,25 @@ export class UserTransaction {
     this.createdAt = now;
     this.updatedAt = now;
   }
+
+  toJSON() {
+    return {
+      id: this.id,
+      amount: this.amount,
+      currencyType: this.currencyType,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+      user: this.user ? this.user.id : null,
+      statusUpdatedBy: this.statusUpdatedBy ? this.id : null,
+      deleted: this.deleted,
+      createdBy: this.createdBy ? this.createdBy.id : null,
+      type: this.type,
+      method: this.method,
+      status: this.status,
+      referenceId: this.referenceId,
+      description: this.description,
+      receiptUrl: this.receiptUrl,
+    };
+  }
 }
 

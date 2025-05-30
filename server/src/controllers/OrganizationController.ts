@@ -2,12 +2,13 @@ import { AuthRequest, Response, NextFunction } from '../types';
 import { z } from 'zod';
 import { OrganizationService } from '../services/OrganizationService';
 import { OrganizationRepo } from '../database/Repos';
+import { UserRole } from '../entity/User';
 
 export const CreateOrganizationSchema = z.object({
   name: z.string()
     .min(2)
     .max(100)
-    .regex(/^[a-zA-Z0-9 ]+$/, 'Organization name must be alphanumeric (letters, numbers, spaces only)')
+    .regex(/^[a-zA-Z0-9]+$/, 'Organization name must be alphanumeric (letters and numbers only, no spaces)')
 });
 
 export const SearchOrganizationQuerySchema = z.object({
@@ -51,6 +52,61 @@ export class OrganizationController {
       }
       const result = await OrganizationService.searchOrganizations(parseResult.data);
       return res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * Get my organization
+   * This endpoint retrieves the organization associated with the authenticated user.
+   */
+  async getMyOrganization(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user?.orgId) {
+        return res.status(404).json({ error: 'Organization not found' });
+      }
+      const organization = await OrganizationRepo.findOne({ where: { id: req.user.orgId } });
+      if (!organization || organization.deleted || !organization.isActive) {
+        return res.status(404).json({ error: 'Organization not found' });
+      }
+      return res.status(200).json({ organization });
+    } catch (err) {
+      next(err);
+    }
+  }  
+
+  async getOrganizationByName(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { organizationName } = req.params;
+      const organization = await OrganizationRepo.findOne({ where: { name: organizationName } });
+      if (!organization || organization.deleted || !organization.isActive) {
+        return res.status(404).json({ error: 'Organization not found' });
+      }
+
+      return res.status(200).json({ organization });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async deleteOrganizationByName(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { organizationName } = req.params;
+      const organization = await OrganizationRepo.findOne({ where: { name: organizationName } });
+      if (!organization || organization.deleted) {
+        return res.status(404).json({ error: 'Organization not found' });
+      }
+      
+      // Only root admins can delete
+      if (req.user?.userRole !== UserRole.ROOT_USER) {
+        return res.status(403).json({ error: 'Forbidden: Only root admins can delete organizations' });
+      }
+
+      organization.deleted = true;
+      await OrganizationRepo.save(organization);
+      
+      return res.status(200).json({ message: 'Organization deleted successfully' });
     } catch (err) {
       next(err);
     }

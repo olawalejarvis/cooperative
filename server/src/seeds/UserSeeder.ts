@@ -25,11 +25,13 @@ export class UserSeeder implements Seeder {
     
     // default organization
     const organization = orgRepo.create({
-      name: 'Default Organization',
+      name: 'defaultname',
+      label: 'Default Organization',
+      description: 'This is the default organization created during seeding.',
       createdBy: user,
       logoUrl: 'https://example.com/logo.png',
       isActive: true,
-      deleted: false
+      deleted: false,
     });
 
     // Save organization first to ensure createdBy is set correctly

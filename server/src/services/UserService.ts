@@ -1,29 +1,12 @@
 import { UserRepo } from '../database/Repos';
+import { UserRole } from '../entity/User';
+import { SearchUsersQuery } from '../models/UserSchema';
 import { JwtPayload } from './JwtTokenService';
-
-export interface UserSearchResult {
-  users: any[]; // Replace with actual User type
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-export interface SearchUsersQuery {
-  q?: string;
-  limit: number;
-  page: number;
-  sortBy: 'createdAt' | 'firstName' | 'lastName';
-  sortOrder: 'asc' | 'desc';
-  deleted?: boolean;
-  isActive?: boolean;
-  role?: 'user' | 'admin' | 'superadmin';
-  createdBy?: string;
-}
+import { SearchResult } from './UserTransactionService';
 
 
 export class UserService {
-  static async searchUsers(params: SearchUsersQuery, currentUser?: JwtPayload): Promise<UserSearchResult> {
+  static async searchUsers(params: SearchUsersQuery, currentUser?: JwtPayload, orgId?: string): Promise<SearchResult> {
     const skip = (params.page - 1) * params.limit;
 
     const qb = UserRepo.createQueryBuilder('user');
@@ -50,7 +33,9 @@ export class UserService {
       qb.andWhere('user.createdBy = :createdBy', { createdBy: params.createdBy });
     }
 
-    if (currentUser?.userRole !== 'root_user') {
+    if (orgId) {
+      qb.andWhere('user.organization = :organizationId', { organizationId: orgId });
+    } else if (currentUser?.userRole !== UserRole.ROOT_USER) {
       qb.andWhere('user.organization = :organizationId', { organizationId: currentUser?.orgId });
     }
 
@@ -60,11 +45,11 @@ export class UserService {
 
     const [users, total] = await qb.getManyAndCount();
     return {
-      users: users.map(user => user.toJSON()),
+      data: users.map(user => user.toJSON()),
       total,
       page: params.page,
       limit: params.limit,
       totalPages: Math.ceil(total / params.limit),
-    } as UserSearchResult;
+    } as SearchResult;
   }
 }

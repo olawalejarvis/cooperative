@@ -49,6 +49,10 @@ export class User {
   @JoinColumn({ name: 'created_by' })
   createdBy!: User;
 
+  @OneToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'updated_by' })
+  updatedBy!: User;
+
   @OneToOne(() => Organization, { nullable: true })
   @JoinColumn({ name: 'organization_id' })
   organization?: Organization;

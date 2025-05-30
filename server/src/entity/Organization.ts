@@ -18,6 +18,12 @@ export class Organization {
   @Column({ unique: true })
   name!: string;
 
+  @Column({ nullable: true })
+  label?: string;
+
+  @Column({ name: 'description', nullable: true })
+  description?: string;
+
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'created_by' })
   createdBy!: User;

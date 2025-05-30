@@ -1,14 +1,6 @@
 import { SearchOrganizationsQuery } from '../controllers/OrganizationController';
 import { OrganizationRepo } from '../database/Repos';
-import { Organization } from '../entity/Organization';
-
-export interface OrganizationSearchResult {
-  organizations: Organization[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
+import { SearchResult } from './UserTransactionService';
 
 
 /**
@@ -21,7 +13,7 @@ export class OrganizationService {
    * @returns A promise that resolves to an object containing the search results.
    * @throws {Error} If an error occurs during the search.
    */
-  static async searchOrganizations(params: SearchOrganizationsQuery): Promise<OrganizationSearchResult> {
+  static async searchOrganizations(params: SearchOrganizationsQuery): Promise<SearchResult> {
     const skip = (params.page - 1) * params.limit;
     const qb = OrganizationRepo.createQueryBuilder('organization');
     
@@ -36,11 +28,11 @@ export class OrganizationService {
     const [organizations, total] = await qb.leftJoinAndSelect('organization.createdBy', 'createdBy').getManyAndCount();
     
     return {
-      organizations: organizations.map(org => org.toJSON()),
+      data: organizations.map(org => org.toJSON()),
       total,
       page: params.page,
       limit: params.limit,
       totalPages: Math.ceil(total / params.limit),
-    } as OrganizationSearchResult;
+    } as SearchResult;
   }
 }

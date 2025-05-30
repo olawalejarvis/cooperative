@@ -14,7 +14,6 @@ export function setRoutes(app: Router) {
     // Transaction routes
     app.use('/v1/transactions', transactionRouter);
 
-
     // Organization routes
     app.use('/v1/organizations', organizationRouter);
 

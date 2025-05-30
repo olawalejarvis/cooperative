@@ -53,3 +53,5 @@ export const SearchUsersQuerySchema = z.object({
   role: z.enum(['user', 'admin', 'superadmin']).optional(),
   createdBy: z.string().uuid().optional()  
 });
+
+export type SearchUsersQuery = z.infer<typeof SearchUsersQuerySchema>;

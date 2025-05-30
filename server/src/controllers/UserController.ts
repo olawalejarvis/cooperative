@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction, AuthRequest } from '../types';
 import { User, UserRole } from '../entity/User';
 import { JwtTokenService } from '../services/JwtTokenService';
-import { SearchUsersQuery, UserService } from '../services/UserService';
+import { UserService } from '../services/UserService';
 import { getLogger } from '../services/logger';
 import { CreateUserSchema, LoginUserSchema, SearchUsersQuerySchema } from '../models/UserSchema';
 import { OrganizationRepo, UserRepo } from '../database/Repos';
@@ -146,11 +146,18 @@ export class UserController {
         logger.warn('Unauthorized access to getMe');
         return res.status(401).json({ error: 'Unauthorized' });
       }
+
       const user = await UserRepo.findOne({ where: { id: userId }, relations: ['organization', 'createdBy'] });
       if (!user) {
         logger.warn('User not found in getMe');
         return res.status(404).json({ error: 'User not found' });
       }
+      
+      if (user.deleted || !user.isActive) {
+        logger.warn('User is inactive or deleted in getMe');
+        return res.status(404).json({ error: 'User not found' });
+      }
+
       logger.info(`getMe for user: ${user.id}`);
       return res.status(200).json(user.toJSON());
     } catch (err) {
@@ -167,12 +174,9 @@ export class UserController {
         logger.warn('Validation failed for searchUsers');
         return res.status(400).json({ error: parseResult.error.flatten() });
       }
-
-      // use SearchUsersQuery interface for type safety
-      const query: SearchUsersQuery = parseResult.data
       
       // Call UserService for search logic
-      const result = await UserService.searchUsers(query, req.user);
+      const result = await UserService.searchUsers(parseResult.data, req.user);
       logger.info('searchUsers executed');
       return res.status(200).json(result);
     } catch (err) {
