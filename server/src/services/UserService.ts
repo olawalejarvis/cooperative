@@ -35,7 +35,7 @@ export class UserService {
 
     if (orgId) {
       qb.andWhere('user.organization = :organizationId', { organizationId: orgId });
-    } else if (currentUser?.userRole !== UserRole.ROOT_USER) {
+    } else if (!UserRole.isRootUser(currentUser?.userRole)) {
       qb.andWhere('user.organization = :organizationId', { organizationId: currentUser?.orgId });
     }
 

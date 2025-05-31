@@ -1,3 +1,4 @@
+import { UserRole } from '../entity/User';
 import { AuthRequest, Response, NextFunction } from '../types';
 
 /**
@@ -8,11 +9,8 @@ import { AuthRequest, Response, NextFunction } from '../types';
  * @param next
  */
 export function adminAuthorization(req: AuthRequest, res: Response, next: NextFunction) {
-  if (req.user != null) {
-    const userRole = req.user.userRole;
-    if (['admin', 'superadmin', 'root_user'].includes(userRole)) {
-      return next();
-    }
+  if (UserRole.isAdmin(req.user?.userRole)) {
+    return next();
   }
   return res.status(403).json({ error: 'Forbidden: Admins only.' });
 }

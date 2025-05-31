@@ -9,6 +9,21 @@ export enum UserRole  {
   ROOT_USER = 'root_user'
 }
 
+export namespace UserRole {
+  export function isRootUser(role?: string): boolean {
+    return role === UserRole.ROOT_USER;
+  }
+  export function isSuperAdmin(role?: string): boolean {
+    return role === UserRole.SUPERADMIN || isRootUser(role);
+  }
+  export function isAdmin(role?: string): boolean {
+    return role === UserRole.ADMIN || isSuperAdmin(role);
+  }
+  export function isUser(role?: string): boolean {
+    return role === UserRole.USER || isAdmin(role);
+  }
+}
+
 
 @Entity({ name: 'user' })
 export class User {
