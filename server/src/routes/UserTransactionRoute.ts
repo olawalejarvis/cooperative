@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import { UserTransactionController } from '../controllers/UserTransactionController';
+import { AggregatorController } from '../controllers/AggregatorController';
 import { authenticateToken } from '../middleware/authenticateToken';
 import { rootUserAuthorization } from '../middleware/rootUserAuthorization';
 import { adminAuthorization } from '../middleware/adminAuthorization';
 
 const transactionRouter = Router();
 const userTransactionController = new UserTransactionController();
+const aggregatorController = new AggregatorController();
 
 transactionRouter.post('/', authenticateToken, userTransactionController.createTransaction);
 transactionRouter.get('/', authenticateToken, rootUserAuthorization, userTransactionController.searchAllTransactions);
@@ -15,5 +17,6 @@ transactionRouter.put('/:transactionId/status', authenticateToken, userTransacti
 transactionRouter.delete('/:transactionId', authenticateToken, adminAuthorization, userTransactionController.deleteTransactionById);
 transactionRouter.get('/organizations/:organizationId', authenticateToken, adminAuthorization, userTransactionController.searchOrganizationTransactions);
 transactionRouter.get('/users/:userId', authenticateToken, adminAuthorization, userTransactionController.searchUserTransactions);
+transactionRouter.get('/users/:userId/aggregate', authenticateToken, aggregatorController.aggregateUserTransactions);
 
 export { transactionRouter };

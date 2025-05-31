@@ -81,6 +81,9 @@ export class User {
   @Column({ name: 'token', nullable: true })
   token?: string;
 
+  @Column({ name: 'code', nullable: true })
+  code?: string;
+
 
   /**
    * Transient properties
