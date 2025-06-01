@@ -1,8 +1,7 @@
 import React from 'react';
 import type { Transaction } from '../store/transaction';
 import { CATable } from './CATable';
-
-export type SortOrder = 'asc' | 'desc';
+import type { SortOrder } from '../types';
 
 interface TransactionTableProps {
   transactions: Transaction[];
