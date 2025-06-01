@@ -33,7 +33,6 @@ export const useUserStore = create<UserState>((set) => ({
     set({ loading: true, error: null });
     try {
       const res = await axios.get(`/v1/transactions/users/${userId}/aggregate`);
-      console.log('Fetched user aggregate:', res.data);
       set({ aggregate: res.data, loading: false });
     } catch (err: unknown) {
       if (typeof err === 'object' && err !== null && 'response' in err) {

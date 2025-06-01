@@ -103,7 +103,7 @@ export function OrganizationHome() {
 
   return (
     <>
-      <AppNavBar orgLabel={organization.label} user={user}/>
+      <AppNavBar orgName={organization.name} orgLabel={organization.label} user={user}/>
       <Container className="mt-5">
         <p>{organization.description || 'No description available.'}</p>
         {/* Auth section for login/register */}

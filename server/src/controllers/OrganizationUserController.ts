@@ -6,6 +6,8 @@ import { OrganizationRepo, UserRepo } from '../database/Repos';
 import { UserService } from '../services/UserService';
 import { JwtTokenService } from '../services/JwtTokenService';
 import { z } from 'zod';
+import crypto from 'crypto';
+import { NotificationService } from '../services/NotificationService';
 
 const logger = getLogger('controllers/OrganizationUserController');
 
@@ -183,6 +185,122 @@ export class OrganizationUserController {
       return res.status(200).json({ message: 'Login successful', user: user.toJSON(), token });
     } catch (err) {
       logger.error(`Error in loginUserForOrganization: ${err}`);
+      next(err);
+    }
+  }
+
+  /**
+   * Login user for a specific organization with 2FA (step 1: send code).
+   * @route POST /v1/organizations/:organizationName/login-2fa
+   */
+  loginUserForOrganization2FA = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { organizationName } = req.params;
+      const parseResult = LoginUserSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        logger.warn('Validation failed for loginUserForOrganization2FA');
+        return res.status(400).json({ error: parseResult.error.flatten() });
+      }
+      // Find organization by name
+      const organization = await OrganizationRepo.findOne({ where: { name: organizationName } });
+      if (!organization || organization.deleted || !organization.isActive) {
+        logger.warn(`Organization not found: ${organizationName}`);
+        return res.status(404).json({ error: 'Organization not found' });
+      }
+      const { username, password } = parseResult.data;
+      const user = await UserRepo.findOne({
+        where: [
+          { email: username, isActive: true, deleted: false, organization: { id: organization.id } },
+          { phoneNumber: username, isActive: true, deleted: false, organization: { id: organization.id } },
+          { userName: username, isActive: true, deleted: false, organization: { id: organization.id } },
+        ],
+        relations: ['organization']
+      });
+      if (!user) {
+        logger.warn('Invalid credentials for loginUserForOrganization2FA');
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+      if (!user.isValidPassword(password)) {
+        logger.warn('Invalid password for loginUserForOrganization2FA');
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+      // Generate a 6-digit code
+      const code = (crypto.randomInt(100000, 999999)).toString();
+      user.code = code;
+      user.codeExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiry
+      await UserRepo.save(user);
+      // Send code via email (using NotificationService)
+      if (user.email) {
+        const notificationService = NotificationService.getInstance();
+        const emailBody = `
+          Hello ${user.firstName || ''},
+
+          We received a request to log in to your Coop App account for organization "${organizationName}".
+
+          Your One-Time Password (OTP) for login is:
+
+              ${code}
+
+          This code is valid for 5 minutes. If you did not request this code, please ignore this email or contact support immediately.
+
+          Thank you,
+          Coop App Security Team
+        `;
+        const subject = 'Your Coop App 2FA Code';
+        await notificationService.sendEmail(user.email, subject, emailBody
+        );
+        logger.info(`2FA code sent to user ${user.id} via email for organization ${organizationName}`);
+        return res.status(200).json({ message: '2FA code sent to your email.' });
+      } else {
+        logger.warn(`User ${user.id} does not have an email address for 2FA`);
+        return res.status(400).json({ error: 'User does not have an email address for 2FA' });
+      }
+    } catch (err) {
+      logger.error(`Error in loginUserForOrganization2FA: ${err}`);
+      next(err);
+    }
+  }
+
+  /**
+   * Confirm 2FA code and complete login (step 2).
+   * @route POST /v1/organizations/:organizationName/login-2fa/verify
+   */
+  verifyUser2FACodeForOrganization = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { organizationName } = req.params;
+      const { username, code } = req.body;
+      // Find organization by name
+      const organization = await OrganizationRepo.findOne({ where: { name: organizationName } });
+      if (!organization || organization.deleted || !organization.isActive) {
+        logger.warn(`Organization not found: ${organizationName}`);
+        return res.status(404).json({ error: 'Organization not found' });
+      }
+      const user = await UserRepo.findOne({
+        where: [
+          { email: username, isActive: true, deleted: false, organization: { id: organization.id } },
+          { phoneNumber: username, isActive: true, deleted: false, organization: { id: organization.id } },
+          { userName: username, isActive: true, deleted: false, organization: { id: organization.id } },
+        ],
+        relations: ['organization']
+      });
+      if (!user || user.code !== code || !user.codeExpiresAt || user.codeExpiresAt < new Date()) {
+        logger.warn('Invalid or expired 2FA code for verifyUser2FACodeForOrganization');
+        return res.status(401).json({ error: 'Invalid or expired code' });
+      }
+      // Clear code and complete login
+      user.code = undefined;
+      user.codeExpiresAt = undefined;
+      // Generate JWT token
+      const token = JwtTokenService.generateToken(user.id, user.role, organization.id);
+      user.lastLogin = new Date().toISOString();
+      user.token = token;
+      await UserRepo.save(user);
+      JwtTokenService.setTokenInCookies(res, token);
+      JwtTokenService.setTokenInHeaders(res, token);
+      logger.info(`User logged in with 2FA for organization ${organizationName}: ${user.id}`);
+      return res.status(200).json({ message: 'Login successful', user: user.toJSON(), token });
+    } catch (err) {
+      logger.error(`Error in verifyUser2FACodeForOrganization: ${err}`);
       next(err);
     }
   }

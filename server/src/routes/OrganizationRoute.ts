@@ -39,8 +39,8 @@ organizationRouter.put('/:organizationName/users/:userId', authenticateToken, or
 organizationRouter.post('/:organizationName/users/guest', organizationUserController.createGuestUserForOrganization);
 organizationRouter.put('/:organizationName/users/:userId/activate', authenticateToken, adminAuthorization, organizationUserController.activateGuestUserForOrganization);
 
-
-
-
+// 2FA login routes
+organizationRouter.post('/:organizationName/users/login-2fa', organizationUserController.loginUserForOrganization2FA);
+organizationRouter.post('/:organizationName/users/login-2fa/verify', organizationUserController.verifyUser2FACodeForOrganization);
 
 export { organizationRouter };

@@ -25,6 +25,17 @@ interface AuthState {
   logout: (organizationName?: string) => void;
   login: (userName: string, password: string, organizationName?: string) => Promise<void>;
   getMe: (organizationName?: string) => Promise<void>;
+  request2FACode: (username: string, password: string, organizationName: string) => Promise<string | null>;
+  verify2FACode: (username: string, code: string, organizationName: string) => Promise<string | null>;
+}
+
+function isAxiosError(err: unknown): err is { response: { data?: { error?: string } } } {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    'response' in err &&
+    typeof (err as Record<string, unknown>).response === 'object'
+  );
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -60,6 +71,43 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user: res.data, loading: false });
     } catch {
       set({ user: null, loading: false });
+    }
+  },
+  request2FACode: async (username, password, organizationName) => {
+    try {
+      await axios.post(`/v1/organizations/${organizationName}/users/login-2fa`, { username, password });
+      return null;
+    } catch (err) {
+      if (err instanceof Error) {
+        return err.message || 'Invalid credentials';
+      }
+      if (isAxiosError(err) && err.response?.data?.error) {
+        return err.response.data.error;
+      }
+      return 'Invalid credentials';
+    }
+  },
+  /**
+   * Verify the 2FA code for a user.
+   * @param username 
+   * @param code 
+   * @param organizationName 
+   */
+  verify2FACode: async (username, code, organizationName) => {
+    try {
+      const res = await axios.post(`/v1/organizations/${organizationName}/users/login-2fa/verify`, { username, code });
+      if (res.data && res.data.user) {
+        set({ user: res.data.user, loading: false });
+      }
+      return null;
+    } catch (err) {
+      if (err instanceof Error) {
+        return err.message || 'Invalid or expired code';
+      }
+      if (isAxiosError(err) && err.response?.data?.error) {
+        return err.response.data.error;
+      }
+      return 'Invalid or expired code';
     }
   },
 }));

@@ -84,6 +84,9 @@ export class User {
   @Column({ name: 'code', nullable: true })
   code?: string;
 
+  @Column({ name: 'code_expires_at', type: 'timestamp', nullable: true })
+  codeExpiresAt?: Date;
+
 
   /**
    * Transient properties
