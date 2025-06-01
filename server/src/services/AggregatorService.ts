@@ -12,14 +12,13 @@ export class AggregatorService {
       dateRange,
       createdBeforeDate,
       createdAfterDate,
-      isActive
     } = query;
 
     const qb = UserTransactionRepo.createQueryBuilder('tx')
       .select(`${aggregationType}(tx.amount)`, 'aggregate')
+      .addSelect('COUNT(tx.id)', 'count')
       .where('tx.user_id = :userId', { userId })
       .andWhere('tx.deleted = :deleted', { deleted })
-      .andWhere('tx.is_active = :isActive', { isActive });
 
     if (transactionType) {
       qb.andWhere('tx.type = :transactionType', { transactionType });
@@ -45,11 +44,19 @@ export class AggregatorService {
       qb.andWhere('tx.created_at >= :createdAfterDate', { createdAfterDate });
     }
 
-    const result = await qb.getRawOne();
+    const rawResult = await qb.getRawOne();
+    const result: { aggregate: number, count: number } | null = rawResult === undefined ? null : rawResult;
     const aggregate = result?.aggregate ?? 0;
+    const count = result?.count ?? 0;
+    
+    // format aggregate as a currency string in NGN format
+    const formattedAggregate = Number(aggregate).toLocaleString('en-NG', { style: 'currency', currency: 'NGN' });
+    
     return {
-      aggregate,
-      reqQuery: query 
+      amount: aggregate,
+      count,
+      formattedAggregate,
+      ...query 
     }
   }
 }

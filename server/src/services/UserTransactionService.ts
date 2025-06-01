@@ -50,7 +50,13 @@ export class UserTransactionService {
     });
 
     return {
-      data: transactions.map(tx => tx.toJSON()),
+      data: transactions.map(tx => {
+        const json = tx.toJSON();
+        return {
+          ...json,
+          formattedAmount: Number(json.amount).toLocaleString('en-NG', { style: 'currency', currency: 'NGN' })
+        };
+      }),
       total,
       page,
       limit: take,

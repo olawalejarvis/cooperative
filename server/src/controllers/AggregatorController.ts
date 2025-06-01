@@ -12,7 +12,6 @@ export const AggregateQuerySchema = z.object({
   transactionMethod: z.nativeEnum(TransactionMethod).optional(),
   transactionStatus: z.nativeEnum(TransactionStatus).optional().default(TransactionStatus.APPROVED),
   deleted: z.boolean().optional().default(false),
-  isActive: z.boolean().optional().default(true),
   // dateRange is an object with optional from and to datetime strings
   dateRange: z
     .object({
@@ -65,7 +64,7 @@ export class AggregatorController {
 
       // Aggregate user transactions
       const aggregate = await AggregatorService.aggregateUserTransactions(userId, parseResult.data);
-      return res.status(200).json({ aggregate });
+      return res.status(200).json(aggregate);
     } catch (err) {
       next(err);
     }

@@ -8,6 +8,6 @@ export const CreateUserTransactionSchema = z.object({
   status: z.nativeEnum(TransactionStatus).optional().default(TransactionStatus.PENDING),
   userId: z.string().uuid().optional(),
   referenceId: z.string().optional().default(''),
-  receiptUrl: z.string().url().optional().default(''),
+  receiptUrl: z.string().url().optional().default('http://localhost:3000/receipt.png'),
   description: z.string().max(255).optional().default(''),
 });

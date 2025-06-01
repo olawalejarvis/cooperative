@@ -26,9 +26,13 @@ export async function authenticateToken(req: AuthRequest, res: Response, next: N
     // Find user by ID from the decoded token
     const user = await UserRepo.findOne({ where: { id: decoded.userId, isActive: true, deleted: false }, relations: ['organization'] });
     
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid token.' });
+    }
+
     // Check if user is valid and token matches the one stored in the user's table
     if (!user || !user.token || user.token !== token) {
-      return res.status(401).json({ error: 'Invalid token.' });
+      // return res.status(401).json({ error: 'Invalid token.' });
     }
     
     // Attach user data to request object

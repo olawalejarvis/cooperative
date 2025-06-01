@@ -33,6 +33,7 @@ export class UserTransactionController {
       
       const { userId: txUserId , ...txData } = parseResult.data;
       let userId = req.user?.userId;
+      let orgId = req.user?.orgId;
       if (txUserId) {
         const user = await UserRepo.findOne({ where: { id: txUserId, isActive: true, deleted: false }, relations: ['organization'] });
         if (!user) {
@@ -46,6 +47,7 @@ export class UserTransactionController {
         }
 
         userId = user.id;
+        orgId = user.organization?.id;
       }
 
       if (req.user?.userRole == UserRole.USER && req.user?.userId !== userId) {
@@ -58,7 +60,7 @@ export class UserTransactionController {
         return res.status(403).json({ error: 'Forbidden: You can only create transactions with status PENDING' });
       }
       
-      const transaction = UserTransactionRepo.create({ ...txData, user: { id: userId } });
+      const transaction = UserTransactionRepo.create({ ...txData, user: { id: userId }, organization: { id: orgId } });
       
       transaction.createdBy = { id: req.user?.userId } as any; // Cast to any to avoid circular reference issues
       transaction.statusUpdatedBy = { id: req.user?.userId } as any; // Cast to any to avoid circular reference issues

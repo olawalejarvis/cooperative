@@ -9,6 +9,7 @@ import {
   BeforeUpdate
 } from 'typeorm';
 import { User } from './User';
+import { Organization } from './Organization';
 
 export enum TransactionStatus {
   PENDING = 'pending',
@@ -99,7 +100,10 @@ export class UserTransaction {
 
   @Column({ name: 'receipt_url', nullable: true })
   receiptUrl?: string;
-  
+
+  @ManyToOne(() => Organization, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organization_id' })
+  organization!: Organization;
   
   @BeforeUpdate()
   beforeUpdate() {
@@ -135,6 +139,7 @@ export class UserTransaction {
       referenceId: this.referenceId,
       description: this.description,
       receiptUrl: this.receiptUrl,
+      organization: this.organization ? this.organization.id : null,
     };
   }
 }

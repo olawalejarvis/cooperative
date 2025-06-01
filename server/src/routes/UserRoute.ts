@@ -8,7 +8,7 @@ const userRouter = Router();
 const userController = new UserController();
 
 userRouter.post('/', authenticateToken, adminAuthorization, userController.createUser);
-userRouter.post('/login', rootUserAuthorization, userController.loginUser);
+userRouter.post('/login', userController.loginUser);
 userRouter.post('/logout', authenticateToken, userController.logoutUser);
 userRouter.get('/me', authenticateToken, userController.getMe);
 userRouter.get('/', authenticateToken, adminAuthorization, userController.searchUsers);
