@@ -74,8 +74,8 @@ export class JwtTokenService {
   static setTokenInCookies(res: any, token: string): void {
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production' ? true : false, // Use secure cookies in production
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 24 * 60 * 60 * 1000 // 1 day
     });
   }
@@ -83,7 +83,7 @@ export class JwtTokenService {
   static clearTokenInCookies(res: any): void {
     res.clearCookie('token', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === 'production' ? true : false,
       sameSite: 'lax',
     });
   }

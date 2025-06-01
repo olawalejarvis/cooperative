@@ -13,7 +13,7 @@ const logger = getLogger('middleware/authenticateToken');
  * @param next
  */
 export async function authenticateToken(req: AuthRequest, res: Response, next: NextFunction) {
-  const token = req.cookies?.token || req.headers['authorization']?.split(' ')[1];
+  const token = req.cookies?.token || req.headers['authorization']?.split(' ')[1] || req.headers.cookie?.split('; ')?.find(row => row.startsWith('token='))?.split('=')[1];
   if (!token) {
     return res.status(401).json({ error: 'Access denied. No token provided.' });
   }

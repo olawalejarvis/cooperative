@@ -58,15 +58,7 @@ export class Organization {
   }
 
   toJSON() {
-    return {
-      id: this.id,
-      name: this.name,
-      createdBy: this.createdBy ? this.createdBy.toJSON() : null,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
-      isActive: this.isActive,
-      deleted: this.deleted,
-      logoUrl: this.logoUrl
-    };
+    const { ...organization } = this;
+    return organization;
   }
 }

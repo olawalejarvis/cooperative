@@ -30,7 +30,7 @@ organizationRouter.post('/:organizationName/users', authenticateToken, adminAuth
 organizationRouter.get('/:organizationName/users', authenticateToken, adminAuthorization, organizationUserController.searchUsersForOrganization);
 organizationRouter.get('/:organizationName/users/me', authenticateToken, organizationUserController.getMeForOrganization);
 organizationRouter.get('/:organizationName/users/:userId', authenticateToken, adminAuthorization, organizationUserController.getUserForOrganization);
-organizationRouter.put('/:organizationName/users/login', organizationUserController.loginUserForOrganization);
+organizationRouter.post('/:organizationName/users/login', organizationUserController.loginUserForOrganization);
 organizationRouter.put('/:organizationName/users/logout', authenticateToken, organizationUserController.logoutUserFromOrganization);
 organizationRouter.delete('/:organizationName/users/:userId', authenticateToken, adminAuthorization, organizationUserController.deleteUserForOrganization);
 organizationRouter.put('/:organizationName/users/:userId', authenticateToken, organizationUserController.updateUserForOrganization);

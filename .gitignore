@@ -11,3 +11,7 @@
 
 # Ignore log files
 /server/logs/
+
+
+/client/.github
+/client/.vscode
