@@ -15,7 +15,7 @@ function App() {
               <h1>Coop App</h1>
               <div>
                 <h1>Welcome to Coop App</h1>
-                <Link to="/defaultname">
+                <Link to="/root">
                   view default organizations
                 </Link>
               </div>
