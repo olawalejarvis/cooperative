@@ -1,6 +1,6 @@
 import { Table as BootstrapTable, Spinner, Alert } from 'react-bootstrap';
 
-export type TableColumn<T> = { key: keyof T & string; label: string; sortBy?: boolean; };
+export type TableColumn<T> = { key: keyof T & string; label: string; sortBy?: boolean; render?: (row: T) => React.ReactNode };
 
 type TableProps<T extends Record<string, unknown>> = {
   data: T[];
@@ -55,7 +55,9 @@ export function CATable<T extends Record<string, unknown>>({
         {data.map((item, index) => (
           <tr key={index} onClick={onRowClick ? () => onRowClick(item) : undefined} style={onRowClick ? { cursor: 'pointer' } : {}}>
             {columns.map(col => (
-              <td key={col.key}>{String(item[col.key])}</td>
+              <td key={col.key}>
+                {col.render ? col.render(item) : String(item[col.key])}
+              </td>
             ))}
           </tr>
         ))}

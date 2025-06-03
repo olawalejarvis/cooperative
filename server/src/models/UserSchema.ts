@@ -41,7 +41,7 @@ export const SearchUsersQuerySchema = z.object({
   q: z.string()
     .trim()
     .max(100)
-    .regex(/^[a-zA-Z0-9@_.\-+]+$/, 'Search query must be alphanumeric or contain valid characters like @, _, -, +')
+    // .regex(/^[a-zA-Z0-9@_.\-+]+$/, 'Search query must be alphanumeric or contain valid characters like @, _, -, +')
     .optional()
     .default(''),
   limit: z.string().regex(/^\d+$/).transform(Number).optional().default('20'),

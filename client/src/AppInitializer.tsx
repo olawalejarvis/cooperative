@@ -5,7 +5,7 @@ import { useLocation } from "react-router-dom";
 
 export function AppInitializer({ children }: { children: React.ReactNode }) {
   const { hasCheckedAuth, getMe } = useAuthStore();
-  const { fetchOrganization } = useOrganizationStore();
+  const { fetchOrganization, error: orgError } = useOrganizationStore();
   const location = useLocation();
 
   useEffect(() => {
@@ -19,5 +19,6 @@ export function AppInitializer({ children }: { children: React.ReactNode }) {
   }, [fetchOrganization, getMe, location.pathname]);
 
   if (!hasCheckedAuth) return <div>Loading...</div>;
+  if (orgError) throw new Error(orgError);
   return <>{children}</>;
 }

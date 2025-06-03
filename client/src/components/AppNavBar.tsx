@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Navbar, Nav, Container, NavDropdown } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { UserPermission } from '../utils/UserPermission';
 import type { Organization } from '../store/organization';
 import type { User } from '../store/auth';
@@ -19,6 +19,7 @@ const AppNavBar: React.FC<AppNavBarProps> = (props) => {
   const { user, organization } = props;
   const [showProfile, setShowProfile] = useState(false);
   const [showOrgModal, setShowOrgModal] = useState(false);
+  const navigate = useNavigate();
 
   // Event handlers only, no store logic
   const handleShowProfile = () => setShowProfile(true);
@@ -76,6 +77,16 @@ const AppNavBar: React.FC<AppNavBarProps> = (props) => {
                 </NavDropdown.Item>
                 <NavDropdown.Item href="#action/3.2" onClick={handleShowOrgModal}>
                   My Organization
+                </NavDropdown.Item>
+                <NavDropdown.Item
+                  as="button"
+                  onClick={() => {
+                    if (organization?.name) {
+                      navigate(`/${organization.name}/users`);
+                    }
+                  }}
+                >
+                  Org Users
                 </NavDropdown.Item>
                 <NavDropdown.Divider />
                 <NavDropdown.Item href="#" onClick={handleLogout}>

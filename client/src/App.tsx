@@ -8,6 +8,8 @@ import OrganizationLoginPage from './pages/OrganizationLoginPage';
 import OrganizationRegisterPage from './pages/OrganizationRegisterPage';
 import { OrganizationHomeContainer } from './pages/OrganizationHomeContainer';
 import OrganizationLayout from './components/OrganizationLayout';
+import OrgUsersContainer from './pages/OrgUsersContainer';
+import RequireAdmin from './components/RequireAdmin';
 
 function App() {
 
@@ -45,6 +47,13 @@ function App() {
             <Route path="/:organizationName/register" element={
               <OrganizationLayout>
                 <OrganizationRegisterPage />
+              </OrganizationLayout>
+            } />
+            <Route path="/:organizationName/users" element={
+              <OrganizationLayout>
+                <RequireAdmin>
+                  <OrgUsersContainer />
+                </RequireAdmin>
               </OrganizationLayout>
             } />
           </Routes>

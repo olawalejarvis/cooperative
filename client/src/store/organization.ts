@@ -45,6 +45,8 @@ interface OrganizationState {
   clearOrganization: () => void;
   registerUser: (input: RegisterUserInput) => Promise<void>;
   updateOrganization: (organizationName: string, label: string) => Promise<void>;
+  deleteUser: (orgName: string, userId: string) => Promise<void>;
+  setUserActive: (orgName: string, userId: string, isActive: boolean) => Promise<void>;
 }
 
 export const useOrganizationStore = create<OrganizationState>((set) => ({
@@ -83,5 +85,11 @@ export const useOrganizationStore = create<OrganizationState>((set) => ({
     } catch (err) {
       throw err;
     }
+  },
+  deleteUser: async (orgName: string, userId: string) => {
+    await axios.delete(`/v1/organizations/${orgName}/users/${userId}`);
+  },
+  setUserActive: async (orgName: string, userId: string, isActive: boolean) => {
+    await axios.patch(`/v1/organizations/${orgName}/users/${userId}/status`, { isActive });
   },
 }));
