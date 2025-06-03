@@ -44,6 +44,7 @@ interface OrganizationState {
   fetchOrganization: (organizationName: string) => Promise<void>;
   clearOrganization: () => void;
   registerUser: (input: RegisterUserInput) => Promise<void>;
+  updateOrganization: (organizationName: string, label: string) => Promise<void>;
 }
 
 export const useOrganizationStore = create<OrganizationState>((set) => ({
@@ -71,5 +72,16 @@ export const useOrganizationStore = create<OrganizationState>((set) => ({
       ? `/v1/organizations/${orgName}/users/register`
       : '/v1/users/register';
     await axios.post(url, userData);
+  },
+  updateOrganization: async (
+    organizationName: string,
+    label: string
+  ) => {
+    try {
+      await axios.put(`/v1/organizations/${organizationName}`, { label });
+      // Optionally update organization in parent/global state if needed
+    } catch (err) {
+      throw err;
+    }
   },
 }));

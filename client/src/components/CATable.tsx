@@ -10,6 +10,7 @@ type TableProps<T extends Record<string, unknown>> = {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   onSortChange?: (sortBy: string, sortOrder: 'asc' | 'desc') => void;
+  onRowClick?: (row: T) => void;
 };
 
 export function CATable<T extends Record<string, unknown>>({
@@ -20,6 +21,7 @@ export function CATable<T extends Record<string, unknown>>({
   sortBy,
   sortOrder,
   onSortChange,
+  onRowClick,
 }: TableProps<T>) {
   if (loading) return <Spinner animation="border" />;
 
@@ -51,7 +53,7 @@ export function CATable<T extends Record<string, unknown>>({
       </thead>
       <tbody>
         {data.map((item, index) => (
-          <tr key={index}>
+          <tr key={index} onClick={onRowClick ? () => onRowClick(item) : undefined} style={onRowClick ? { cursor: 'pointer' } : {}}>
             {columns.map(col => (
               <td key={col.key}>{String(item[col.key])}</td>
             ))}

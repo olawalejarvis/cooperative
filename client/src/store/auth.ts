@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import axios from '../api/axios';
+import type { Organization } from './organization';
 
 // Define the User type to match the structure expected from the API
 export type User = {
@@ -12,7 +13,7 @@ export type User = {
   isActive: boolean;
   deleted: boolean;
   role: string; // e.g., 'ROOT_USER', 'ADMIN', etc.'
-  organization?: string; // Organization ID or name
+  organization?: Organization; // Organization ID or name
   createdAt?: string;
   updatedAt?: string;
   token?: string;
@@ -27,6 +28,13 @@ interface AuthState {
   getMe: (organizationName?: string) => Promise<void>;
   request2FACode: (username: string, password: string, organizationName: string) => Promise<string | null>;
   verify2FACode: (username: string, code: string, organizationName: string) => Promise<string | null>;
+  updateProfile: (
+    organizationName: string | undefined,
+    userId: string | undefined,
+    firstName: string,
+    lastName: string,
+    setUser: (user: User) => void
+  ) => Promise<void>;
 }
 
 function isAxiosError(err: unknown): err is { response: { data?: { error?: string } } } {
@@ -108,6 +116,29 @@ export const useAuthStore = create<AuthState>((set) => ({
         return err.response.data.error;
       }
       return 'Invalid or expired code';
+    }
+  },
+  updateProfile: async (
+    organizationName: string | undefined,
+    userId: string | undefined,
+    firstName: string,
+    lastName: string,
+    setUser: (user: User) => void
+  ) => {
+    if (!organizationName || !userId) throw new Error('Missing organization or user ID');
+    try {
+      const res = await axios.put(
+        `/v1/organizations/${organizationName}/users/${userId}`,
+        { firstName, lastName }
+      );
+      if (res.data && res.data.user) {
+        setUser(res.data.user);
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        throw err;
+      }
+      throw new Error('Update failed');
     }
   },
 }));

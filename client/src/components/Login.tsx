@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Button, Alert, Container, Row, Col } from 'react-bootstrap';
 import { useAuthStore } from '../store/auth';
-import TwoFactorModal from './TwoFactorModal';
+import { Verify2FACodeModal } from './Verify2FACodeModal';
 
 interface LoginProps {
   orgName?: string;
@@ -84,7 +84,7 @@ const Login: React.FC<LoginProps> = ({ orgName }) => {
           </Form>
         </Col>
       </Row>
-      <TwoFactorModal
+      <Verify2FACodeModal
         show={show2FA}
         onSubmit={handle2FAVerify}
         onHide={() => setShow2FA(false)}

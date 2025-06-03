@@ -1,0 +1,7 @@
+/* Scrollable modal body utility for CAModal */
+.ca-modal-scrollable {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* Only superAdmins can update organization, so add a utility class if needed for UI, but logic is in the component. */

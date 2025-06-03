@@ -1,41 +1,58 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Navbar, Nav, Container, NavDropdown } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { useAuthStore } from '../store/auth';
-import type { User } from '../store/auth';
 import { UserPermission } from '../utils/UserPermission';
+import type { Organization } from '../store/organization';
+import type { User } from '../store/auth';
+import UserProfile from './UserProfile';
+import OrganizationProfile from './OrganizationProfile';
 
 export interface AppNavBarProps {
-  orgName?: string;
-  orgLabel?: string;
-  orgLogo?: string;
+  organization?: Organization;
   user?: User | null;
+  onLogout: () => void;
+  onProfileUpdate: (firstName: string, lastName: string) => Promise<void>;
+  onOrganizationUpdate: (label: string) => Promise<void>;
 }
 
 const AppNavBar: React.FC<AppNavBarProps> = (props) => {
-  const { orgLabel, user, orgName } = props;
-  const logout = useAuthStore((state) => state.logout);
+  const { user, organization } = props;
+  const [showProfile, setShowProfile] = useState(false);
+  const [showOrgModal, setShowOrgModal] = useState(false);
 
-  const handleLogout = async () => {
-    try {
-      logout(orgName);
-    } catch {
-      logout();
-    }
+  // Event handlers only, no store logic
+  const handleShowProfile = () => setShowProfile(true);
+  const handleHideProfile = () => setShowProfile(false);
+  const handleShowOrgModal = () => setShowOrgModal(true);
+  const handleHideOrgModal = () => setShowOrgModal(false);
+  const handleLogout = () => {
+    if (props.onLogout) props.onLogout();
   };
 
   return (
     <Navbar collapseOnSelect expand="md" bg="dark" variant="dark" sticky="top">
       <Container>
-        <Navbar.Brand as={Link} to="/">
-          {orgLabel}
+        <Navbar.Brand as={Link} to={`/${organization?.name || ''}`}>
+          {organization?.label}
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="responsive-navbar-nav" />
         <Navbar.Collapse id="responsive-navbar-nav">
           <Nav className="me-auto">
-            {UserPermission.isRootUser(user?.role) && <Nav.Link as={Link} to="/organizations">Organizations</Nav.Link>}
-            {UserPermission.isAdmin(user?.role) && <Nav.Link as={Link} to="/users">Users</Nav.Link>}
-            {UserPermission.isUser(user?.role) && <Nav.Link as={Link} to="/users">Transactions</Nav.Link>}
+            {UserPermission.isRootUser(user?.role) && (
+              <Nav.Link as={Link} to="/organizations">
+                Organizations
+              </Nav.Link>
+            )}
+            {UserPermission.isAdmin(user?.role) && (
+              <Nav.Link as={Link} to="/users">
+                Users
+              </Nav.Link>
+            )}
+            {UserPermission.isUser(user?.role) && (
+              <Nav.Link as={Link} to={`/${organization?.name}/transactions`}>
+                Transactions
+              </Nav.Link>
+            )}
             {/* Add more links as needed */}
           </Nav>
           <Nav>
@@ -45,11 +62,21 @@ const AppNavBar: React.FC<AppNavBarProps> = (props) => {
                 title={`${user.firstName} ${user.lastName}`}
                 menuVariant="dark"
               >
-                <NavDropdown.Item href="#action/3.1">My Profile</NavDropdown.Item>
-                <NavDropdown.Item href="#action/3.2">
+                <NavDropdown.Item
+                  href="#action/3.1"
+                  onClick={handleShowProfile}
+                >
+                  My Profile
+                </NavDropdown.Item>
+                <NavDropdown.Item
+                  as={Link}
+                  to={user && organization ? `/${organization.name}/transactions` : '/'}
+                >
+                  Transactions
+                </NavDropdown.Item>
+                <NavDropdown.Item href="#action/3.2" onClick={handleShowOrgModal}>
                   My Organization
                 </NavDropdown.Item>
-                <NavDropdown.Item href="#action/3.3">Setting</NavDropdown.Item>
                 <NavDropdown.Divider />
                 <NavDropdown.Item href="#" onClick={handleLogout}>
                   Logout
@@ -58,6 +85,19 @@ const AppNavBar: React.FC<AppNavBarProps> = (props) => {
             )}
           </Nav>
         </Navbar.Collapse>
+        <UserProfile
+          show={showProfile}
+          onHide={handleHideProfile}
+          user={user ?? { firstName: '', lastName: '' }}
+          onUpdate={props.onProfileUpdate}
+        />
+        <OrganizationProfile
+          show={showOrgModal}
+          onHide={handleHideOrgModal}
+          organization={organization!}
+          userRole={user?.role}
+          onUpdate={props.onOrganizationUpdate}
+        />
       </Container>
     </Navbar>
   );

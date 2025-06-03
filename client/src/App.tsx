@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { OrganizationHome } from './pages/OrganizationHome';
 import { Link } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { TransactionsContainer } from './pages/TransactionsContainer';
 
 function App() {
 
@@ -22,6 +23,7 @@ function App() {
             </>
           } />
           <Route path="/:organizationName" element={<OrganizationHome />} />
+          <Route path="/:organizationName/transactions" element={<TransactionsContainer />} />
         </Routes>
       </BrowserRouter>
     </ErrorBoundary>
