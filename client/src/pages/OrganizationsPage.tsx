@@ -5,6 +5,8 @@ import { Button } from 'react-bootstrap';
 import type { Organization, User } from '../store/organization';
 import { useOrganizationStore } from '../store/organization';
 import OrganizationProfile from '../components/OrganizationProfile';
+import { useAuthStore } from '../store/auth';
+import { UserPermission } from '../utils/UserPermission';
 import './OrganizationsPage.css';
 
 interface OrganizationsPageProps {
@@ -29,7 +31,18 @@ const OrganizationsPage: React.FC<OrganizationsPageProps> = ({
   const [profileOrg, setProfileOrg] = useState<Organization | null>(null);
   const [profileEditMode, setProfileEditMode] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    name: '',
+    label: '',
+    description: '',
+    logoUrl: '',
+  });
+  const [createLoading, setCreateLoading] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
   const organizationStore = useOrganizationStore();
+  const authUser = useAuthStore(state => state.user);
+  const isRoot = UserPermission.isRootUser(authUser?.role);
 
   const handleView = (org: Record<string, unknown>) => {
     // Map Record<string, unknown> to Organization
@@ -75,6 +88,36 @@ const OrganizationsPage: React.FC<OrganizationsPageProps> = ({
       reload();
     } finally {
       setProfileLoading(false);
+    }
+  };
+  const handleCreateChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setCreateForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  };
+  const handleOpenCreate = () => {
+    setCreateForm({ name: '', label: '', description: '', logoUrl: '' });
+    setCreateError(null);
+    setShowCreateModal(true);
+  };
+  const handleCloseCreate = () => setShowCreateModal(false);
+  const handleCreateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreateLoading(true);
+    setCreateError(null);
+    try {
+      if (!createForm.name || !createForm.label) {
+        setCreateError('Name and label are required.');
+        setCreateLoading(false);
+        return;
+      }
+      await organizationStore.createOrganization?.(createForm);
+      setShowCreateModal(false);
+      setCreateForm({ name: '', label: '', description: '', logoUrl: '' });
+      reload();
+    } catch (err: unknown) {
+      if (err instanceof Error) setCreateError(err.message);
+      else setCreateError('Failed to create organization');
+    } finally {
+      setCreateLoading(false);
     }
   };
 
@@ -126,15 +169,26 @@ const OrganizationsPage: React.FC<OrganizationsPageProps> = ({
             Manage all organizations in the system
           </div>
         </div>
-        <div className="orgs-filter-input">
-          <input
-            type="text"
-            className="form-control rounded-pill px-4 fw-semibold shadow-sm"
-            style={{ fontSize: '1.01rem', background: '#f6f8fa', color: '#3b82f6', border: '1.5px solid #e0eafc', minWidth: 220 }}
-            placeholder="Filter by name or label..."
-            value={filter}
-            onChange={e => setFilter(e.target.value)}
-          />
+        <div className="d-flex align-items-center gap-2">
+          {isRoot && (
+            <Button
+              className="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm"
+              style={{ fontSize: '1.01rem', background: '#3b82f6', border: 'none' }}
+              onClick={handleOpenCreate}
+            >
+              + Create New Organization
+            </Button>
+          )}
+          <div className="orgs-filter-input">
+            <input
+              type="text"
+              className="form-control rounded-pill px-4 fw-semibold shadow-sm"
+              style={{ fontSize: '1.01rem', background: '#f6f8fa', color: '#3b82f6', border: '1.5px solid #e0eafc', minWidth: 220 }}
+              placeholder="Filter by name or label..."
+              value={filter}
+              onChange={e => setFilter(e.target.value)}
+            />
+          </div>
         </div>
       </div>
       <CATable
@@ -183,6 +237,39 @@ const OrganizationsPage: React.FC<OrganizationsPageProps> = ({
             <div className="mb-2"><strong>Organization:</strong> {String(modalOrg.label)} ({String(modalOrg.name)})</div>
           </div>
         )}
+      </CAModal>
+      <CAModal show={showCreateModal} onHide={handleCloseCreate} title="Create New Organization" size="lg">
+        <form onSubmit={handleCreateSubmit} className="d-flex flex-column gap-3 p-2">
+          <div className="row">
+            <div className="col-md-6 mb-2">
+              <label className="form-label fw-semibold">Name</label>
+              <input type="text" name="name" className="form-control rounded-pill px-3" value={createForm.name} onChange={handleCreateChange} required />
+            </div>
+            <div className="col-md-6 mb-2">
+              <label className="form-label fw-semibold">Label</label>
+              <input type="text" name="label" className="form-control rounded-pill px-3" value={createForm.label} onChange={handleCreateChange} required />
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-12 mb-2">
+              <label className="form-label fw-semibold">Description</label>
+              <textarea name="description" className="form-control rounded-4 px-3" value={createForm.description} onChange={handleCreateChange} rows={3} />
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-12 mb-2">
+              <label className="form-label fw-semibold">Logo URL</label>
+              <input type="text" name="logoUrl" className="form-control rounded-pill px-3" value={createForm.logoUrl} onChange={handleCreateChange} />
+            </div>
+          </div>
+          {createError && <div className="text-danger fw-semibold">{createError}</div>}
+          <div className="d-flex justify-content-end gap-2 mt-2">
+            <button type="button" className="btn btn-outline-secondary rounded-pill px-4" onClick={handleCloseCreate} disabled={createLoading}>Cancel</button>
+            <button type="submit" className="btn btn-primary rounded-pill px-4" style={{ background: '#3b82f6', border: 'none' }} disabled={createLoading}>
+              {createLoading ? 'Creating...' : 'Create'}
+            </button>
+          </div>
+        </form>
       </CAModal>
     </div>
   );

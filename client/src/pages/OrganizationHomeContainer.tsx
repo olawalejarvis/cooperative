@@ -1,6 +1,4 @@
 import { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { useOrganizationStore } from '../store/organization';
 import { useAuthStore } from '../store/auth';
 import { useUserStore } from '../store/user';
 import { useTransactionStore } from '../store/transaction';
@@ -9,8 +7,6 @@ import OrganizationHomePage from './OrganizationHomePage';
 import { withAuth } from '../components/withAuth';
 
 export function OrganizationHomeContainer() {
-  const { organizationName } = useParams<{ organizationName: string }>();
-  const { organization } = useOrganizationStore();
   const { user, } = useAuthStore();
   const { aggregate, loading: userAggLoading, error: userAggError, fetchUserAggregate } = useUserStore();
   const { transactions, loading: txLoading, error: txError, fetchMyTransactions } = useTransactionStore();
@@ -31,8 +27,6 @@ export function OrganizationHomeContainer() {
 
   return (
     <OrganizationHomePage
-      // organization={organization}
-      // organizationName={organizationName}
       user={user}
       aggregate={aggregate}
       userAggLoading={userAggLoading}
@@ -48,5 +42,3 @@ export function OrganizationHomeContainer() {
 }
 
 export const AuthOrganizationHome = withAuth(OrganizationHomeContainer);
-
-// export default withAuth(OrganizationHomeContainer);

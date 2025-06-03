@@ -8,6 +8,7 @@ import type { SortOrder } from '../types';
 import './TransactionsPage.css';
 import { TRANSACTION_METHODS, TRANSACTION_STATUSES, TRANSACTION_TYPES } from '../types/transactionFilters';
 import { useTransactionStore } from '../store/transaction';
+import { CAModal } from '../components/CAModal';
 
 interface TransactionsPageProps {
   user: User | null | undefined;
@@ -69,30 +70,92 @@ export default function TransactionsPage(props: TransactionsPageProps) {
     }
   };
 
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    amount: '',
+    type: '',
+    method: '',
+    status: 'pending',
+    createdAt: '',
+  });
+  const [createLoading, setCreateLoading] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const isAdmin = UserPermission.isAdmin(user?.role);
+
+  const handleCreateChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setCreateForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  };
+
+  const handleOpenCreate = () => {
+    setCreateForm({ amount: '', type: '', method: '', status: 'pending', createdAt: '' });
+    setCreateError(null);
+    setShowCreateModal(true);
+  };
+  const handleCloseCreate = () => setShowCreateModal(false);
+
+  const handleCreateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreateLoading(true);
+    setCreateError(null);
+    try {
+      if (!createForm.amount || !createForm.type || !createForm.method || !createForm.createdAt) {
+        setCreateError('All fields except status are required.');
+        setCreateLoading(false);
+        return;
+      }
+      await transactionStore.createTransaction({
+        amount: Number(createForm.amount),
+        type: createForm.type,
+        method: createForm.method,
+        status: isAdmin ? createForm.status : 'pending',
+        createdAt: createForm.createdAt,
+      });
+      setShowCreateModal(false);
+      setCreateForm({ amount: '', type: '', method: '', status: 'pending', createdAt: '' });
+      // Optionally, refresh the list
+      handleAdvancedFilter();
+    } catch (err: unknown) {
+      if (err instanceof Error) setCreateError(err.message);
+      else setCreateError('Failed to create transaction');
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
   return (
     <>
       <Container className="mt-5">
         <div className="transactions-top-card shadow-sm rounded-4 p-4 mb-4 bg-white d-flex flex-column gap-3 position-relative">
-          <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-            <div>
+          <div className="row align-items-center g-3 flex-wrap">
+            <div className="col-12 col-md-6 d-flex flex-column justify-content-center">
               <h2 className="transactions-title mb-1">Transactions</h2>
               <div className="transactions-subtitle text-muted" style={{ fontSize: '1.04rem' }}>
                 View and manage your recent account transactions
               </div>
             </div>
-            <div style={{ position: 'relative', minWidth: 180, maxWidth: 220, flex: '1 1 180px' }}>
-              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 2 }}>
-                <svg width="18" height="18" fill="#2563eb" viewBox="0 0 16 16"><path d="M6 10.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm3-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5z"/></svg>
-              </span>
-              <select
-                className="form-select rounded-pill ps-5 px-3 fw-semibold shadow-sm"
-                style={{ paddingLeft: 40, fontSize: '1.08rem', color: '#2563eb', border: '2px solid #3b82f6', background: '#f6f8fa', minWidth: 180, maxWidth: 220, flex: '1 1 180px' }}
-                value={filter}
-                onChange={e => onFilterChange(e.target.value as 'my' | 'org')}
+            <div className="col-12 col-md-6 d-flex flex-row flex-wrap justify-content-md-end align-items-center gap-2 mt-3 mt-md-0">
+              <button
+                className="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm flex-shrink-0"
+                type="button"
+                style={{ fontSize: '1.05rem', background: '#3b82f6', border: 'none', minWidth: 180 }}
+                onClick={handleOpenCreate}
               >
-                <option value="my">My Transactions</option>
-                {canViewOrgTransactions && <option value="org">Org Transactions</option>}
-              </select>
+                + Create New Transaction
+              </button>
+              <div style={{ position: 'relative', minWidth: 180, maxWidth: 220, flex: '1 1 180px' }}>
+                <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 2 }}>
+                  <svg width="18" height="18" fill="#2563eb" viewBox="0 0 16 16"><path d="M6 10.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm3-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5z"/></svg>
+                </span>
+                <select
+                  className="form-select rounded-pill ps-5 px-3 fw-semibold shadow-sm"
+                  style={{ paddingLeft: 40, fontSize: '1.08rem', color: '#2563eb', border: '2px solid #3b82f6', background: '#f6f8fa', minWidth: 180, maxWidth: 220 }}
+                  value={filter}
+                  onChange={e => onFilterChange(e.target.value as 'my' | 'org')}
+                >
+                  <option value="my">My Transactions</option>
+                  {canViewOrgTransactions && <option value="org">Org Transactions</option>}
+                </select>
+              </div>
             </div>
           </div>
           {/* Responsive filter row */}
@@ -136,6 +199,54 @@ export default function TransactionsPage(props: TransactionsPageProps) {
           />
         )}
       </Container>
+      {/* Create Transaction Modal */}
+      <CAModal show={showCreateModal} onHide={handleCloseCreate} title="Create New Transaction" size="lg">
+        <form onSubmit={handleCreateSubmit} className="d-flex flex-column gap-3 p-2">
+          <div className="row">
+            <div className="col-md-6 mb-2">
+              <label className="form-label fw-semibold">Amount</label>
+              <input type="number" name="amount" className="form-control rounded-pill px-3" min="0" step="0.01" value={createForm.amount} onChange={handleCreateChange} required />
+            </div>
+            <div className="col-md-6 mb-2">
+              <label className="form-label fw-semibold">Type</label>
+              <select name="type" className="form-select rounded-pill px-3" value={createForm.type} onChange={handleCreateChange} required>
+                <option value="" disabled>Select type</option>
+                {TRANSACTION_TYPES.filter(opt => opt.value).map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-md-6 mb-2">
+              <label className="form-label fw-semibold">Method</label>
+              <select name="method" className="form-select rounded-pill px-3" value={createForm.method} onChange={handleCreateChange} required>
+                <option value="" disabled>Select method</option>
+                {TRANSACTION_METHODS.filter(opt => opt.value).map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+              </select>
+            </div>
+            <div className="col-md-6 mb-2">
+              <label className="form-label fw-semibold">Date</label>
+              <input type="date" name="createdAt" className="form-control rounded-pill px-3" value={createForm.createdAt} onChange={handleCreateChange} required />
+            </div>
+          </div>
+          {isAdmin && (
+            <div className="row">
+              <div className="col-md-6 mb-2">
+                <label className="form-label fw-semibold">Status</label>
+                <select name="status" className="form-select rounded-pill px-3" value={createForm.status} onChange={handleCreateChange} required>
+                  {TRANSACTION_STATUSES.filter(opt => opt.value).map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                </select>
+              </div>
+            </div>
+          )}
+          {createError && <div className="text-danger fw-semibold">{createError}</div>}
+          <div className="d-flex justify-content-end gap-2 mt-2">
+            <button type="button" className="btn btn-outline-secondary rounded-pill px-4" onClick={handleCloseCreate} disabled={createLoading}>Cancel</button>
+            <button type="submit" className="btn btn-primary rounded-pill px-4" style={{ background: '#3b82f6', border: 'none' }} disabled={createLoading}>
+              {createLoading ? 'Creating...' : 'Create'}
+            </button>
+          </div>
+        </form>
+      </CAModal>
     </>
   );
 }

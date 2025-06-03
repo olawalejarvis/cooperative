@@ -50,6 +50,7 @@ interface OrganizationState {
   fetchOrganizations: (params: { q?: string; sortBy?: string; sortOrder?: string; page?: number; limit?: number }) => Promise<Organization[]>;
   deactivateOrganization: (organizationName: string) => Promise<void>;
   deleteOrganization: (organizationName: string) => Promise<void>;
+  createOrganization: (data: Partial<Organization>) => Promise<void>;
 }
 
 export const useOrganizationStore = create<OrganizationState>((set) => ({
@@ -117,5 +118,9 @@ export const useOrganizationStore = create<OrganizationState>((set) => ({
   },
   deleteOrganization: async (organizationName: string) => {
     await axios.delete(`/v1/organizations/${organizationName}`);
+  },
+  createOrganization: async (data: Partial<Organization>) => {
+    await axios.post('/v1/organizations', data);
+    // Optionally, refetch or update the organizations in state
   },
 }));

@@ -29,6 +29,7 @@ interface TransactionState {
   fetchAllTransactions: (options?: { sortBy?: string; sortOrder?: 'asc' | 'desc'; limit?: number; page?: number }) => Promise<TransactionPage | undefined>;
   updateTransactionStatus: (id: string, status: string) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
+  createTransaction: (data: Partial<Transaction>) => Promise<void>;
 }
 
 export const useTransactionStore = create<TransactionState>((set) => ({
@@ -91,6 +92,10 @@ export const useTransactionStore = create<TransactionState>((set) => ({
   },
   deleteTransaction: async (id: string) => {
     await axios.delete(`/v1/transactions/${id}`);
+    // Optionally, refetch or update the transactions in state
+  },
+  createTransaction: async (data: Partial<Transaction>) => {
+    await axios.post('/v1/transactions', data);
     // Optionally, refetch or update the transactions in state
   },
 }));
