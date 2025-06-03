@@ -47,6 +47,9 @@ interface OrganizationState {
   updateOrganization: (organizationName: string, label: string) => Promise<void>;
   deleteUser: (orgName: string, userId: string) => Promise<void>;
   setUserActive: (orgName: string, userId: string, isActive: boolean) => Promise<void>;
+  fetchOrganizations: (params: { q?: string; sortBy?: string; sortOrder?: string; page?: number; limit?: number }) => Promise<Organization[]>;
+  deactivateOrganization: (organizationName: string) => Promise<void>;
+  deleteOrganization: (organizationName: string) => Promise<void>;
 }
 
 export const useOrganizationStore = create<OrganizationState>((set) => ({
@@ -91,5 +94,26 @@ export const useOrganizationStore = create<OrganizationState>((set) => ({
   },
   setUserActive: async (orgName: string, userId: string, isActive: boolean) => {
     await axios.patch(`/v1/organizations/${orgName}/users/${userId}/status`, { isActive });
+  },
+  fetchOrganizations: async (params = {}) => {
+    set({ loading: true, error: null });
+    try {
+      const res = await axios.get('/v1/organizations', { params });
+      set({ loading: false });
+      return res.data.data || [];
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        set({ error: err.response?.data?.error || err.message, loading: false });
+      } else {
+        set({ error: 'Unknown error', loading: false });
+      }
+      return [];
+    }
+  },
+  deactivateOrganization: async (organizationName: string) => {
+    await axios.patch(`/v1/organizations/${organizationName}`, { isActive: false });
+  },
+  deleteOrganization: async (organizationName: string) => {
+    await axios.delete(`/v1/organizations/${organizationName}`);
   },
 }));

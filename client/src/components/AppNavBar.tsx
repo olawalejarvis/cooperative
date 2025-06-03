@@ -39,8 +39,8 @@ const AppNavBar: React.FC<AppNavBarProps> = (props) => {
         <Navbar.Toggle aria-controls="responsive-navbar-nav" />
         <Navbar.Collapse id="responsive-navbar-nav">
           <Nav className="me-auto">
-            {UserPermission.isRootUser(user?.role) && (
-              <Nav.Link as={Link} to="/organizations">
+            {/* {UserPermission.isRootUser(user?.role) && (
+              <Nav.Link as={Link} to={`/${organization?.name}/organizations`}>
                 Organizations
               </Nav.Link>
             )}
@@ -53,7 +53,7 @@ const AppNavBar: React.FC<AppNavBarProps> = (props) => {
               <Nav.Link as={Link} to={`/${organization?.name}/transactions`}>
                 Transactions
               </Nav.Link>
-            )}
+            )} */}
             {/* Add more links as needed */}
           </Nav>
           <Nav>
@@ -88,6 +88,16 @@ const AppNavBar: React.FC<AppNavBarProps> = (props) => {
                 >
                   Org Users
                 </NavDropdown.Item>
+                {UserPermission.isRootUser(user.role) && (<NavDropdown.Item
+                  as="button"
+                  onClick={() => {
+                    if (organization?.name) {
+                      navigate(`/${organization.name}/organizations`);
+                    }
+                  }}
+                >
+                  Organizations
+                </NavDropdown.Item>)}
                 <NavDropdown.Divider />
                 <NavDropdown.Item href="#" onClick={handleLogout}>
                   Logout

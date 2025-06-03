@@ -10,6 +10,7 @@ import { OrganizationHomeContainer } from './pages/OrganizationHomeContainer';
 import OrganizationLayout from './components/OrganizationLayout';
 import OrgUsersContainer from './pages/OrgUsersContainer';
 import RequireAdmin from './components/RequireAdmin';
+import OrganizationsContainer from './pages/OrganizationsContainer';
 
 function App() {
 
@@ -54,6 +55,11 @@ function App() {
                 <RequireAdmin>
                   <OrgUsersContainer />
                 </RequireAdmin>
+              </OrganizationLayout>
+            } />
+            <Route path="/:orgName/organizations" element={
+              <OrganizationLayout>
+                <OrganizationsContainer />
               </OrganizationLayout>
             } />
           </Routes>

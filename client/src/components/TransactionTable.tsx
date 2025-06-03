@@ -42,7 +42,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, loadi
   };
 
   // UseCallback for handleRowClick to satisfy useMemo dependency
-  const handleRowClick = React.useCallback((row: Record<string, unknown>) => {
+  const handleView = React.useCallback((row: Record<string, unknown>) => {
     if (onRowClick) {
       onRowClick(row as Transaction);
     }
@@ -87,7 +87,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, loadi
             key: 'actions',
             label: 'Actions',
             sortBy: false,
-            render: (row: Transaction) => (
+            render: (row: Record<string, unknown>) => (
               <>
                 <Button
                   variant="info"
@@ -95,7 +95,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, loadi
                   className={isSuperAdmin ? "me-2" : undefined}
                   onClick={e => {
                     e.stopPropagation();
-                    handleRowClick(row);
+                    handleView(row);
                   }}
                 >
                   View
@@ -117,7 +117,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, loadi
           },
         ]
       : []),
-  ], [isSuperAdmin, currentUser, handleRowClick]);
+  ], [isSuperAdmin, currentUser, handleView]);
 
   // Use the original transactions array as data
   const tableData = transactions || [];
@@ -132,7 +132,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, loadi
         sortBy={sortBy}
         sortOrder={sortOrder}
         onSortChange={handleSort}
-        onRowClick={handleRowClick as (row: Transaction) => void}
+        onRowClick={handleView as (row: Record<string, unknown>) => void}
       />
       <CAModal
         show={showModal}
