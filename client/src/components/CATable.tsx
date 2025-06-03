@@ -25,7 +25,8 @@ export function CATable<T extends Record<string, unknown>>({
   onSortChange,
   onRowClick,
   onEndReached,
-}: TableProps<T> & { onEndReached?: () => void }) {
+  showIndex = true,
+}: TableProps<T> & { onEndReached?: () => void; showIndex?: boolean }) {
   const tableBodyRef = useRef<HTMLTableSectionElement>(null);
   const scrollableDivRef = useRef<HTMLDivElement>(null);
 
@@ -51,6 +52,19 @@ export function CATable<T extends Record<string, unknown>>({
     }
   };
 
+  // Add auto-numbering column if enabled
+  const columnsWithIndex = showIndex
+    ? [
+        {
+          key: '__index',
+          label: '#',
+          sortBy: false,
+          render: (_: T, idx: number) => idx + 1,
+        } as TableColumn<T>,
+        ...columns,
+      ]
+    : columns;
+
   const table = (
     <div className="catable-financial-wrapper">
       <BootstrapTable
@@ -62,7 +76,7 @@ export function CATable<T extends Record<string, unknown>>({
       >
         <thead className="catable-thead">
           <tr>
-            {columns.map(col => (
+            {columnsWithIndex.map(col => (
               <th
                 key={col.key}
                 onClick={col.sortBy ? () => handleSort(col) : undefined}
@@ -86,9 +100,11 @@ export function CATable<T extends Record<string, unknown>>({
         <tbody ref={tableBodyRef}>
           {data.map((item, index) => (
             <tr key={index} onClick={onRowClick ? () => onRowClick(item) : undefined} style={onRowClick ? { cursor: 'pointer' } : {}} className="catable-row">
-              {columns.map(col => (
+              {columnsWithIndex.map(col => (
                 <td key={col.key} className="catable-cell">
-                  {col.render ? col.render(item) : String(item[col.key])}
+                  {col.key === '__index'
+                    ? index + 1
+                    : (col.render ? col.render(item) : String(item[col.key]))}
                 </td>
               ))}
             </tr>

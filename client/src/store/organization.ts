@@ -44,7 +44,7 @@ interface OrganizationState {
   fetchOrganization: (organizationName: string) => Promise<void>;
   clearOrganization: () => void;
   registerUser: (input: RegisterUserInput) => Promise<void>;
-  updateOrganization: (organizationName: string, label: string) => Promise<void>;
+  updateOrganization: (organizationName: string, label: string, name?: string, description?: string) => Promise<void>;
   deleteUser: (orgName: string, userId: string) => Promise<void>;
   setUserActive: (orgName: string, userId: string, isActive: boolean) => Promise<void>;
   fetchOrganizations: (params: { q?: string; sortBy?: string; sortOrder?: string; page?: number; limit?: number }) => Promise<Organization[]>;
@@ -80,10 +80,12 @@ export const useOrganizationStore = create<OrganizationState>((set) => ({
   },
   updateOrganization: async (
     organizationName: string,
-    label: string
+    label: string,
+    name?: string,
+    description?: string
   ) => {
     try {
-      await axios.put(`/v1/organizations/${organizationName}`, { label });
+      await axios.put(`/v1/organizations/${organizationName}`, { label, name, description });
       // Optionally update organization in parent/global state if needed
     } catch (err) {
       throw err;

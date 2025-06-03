@@ -65,9 +65,8 @@ function UserDashboard({ userAggLoading, userAggError, aggregate, transactions, 
         chartData={chartData}
         isYearToDate={true}
       />
-      <h5 className="mt-4" style={{ fontSize: '1.1rem' }}>My Transactions</h5>
       <div className="text-muted mb-2" style={{ fontSize: '0.98rem' }}>
-        Showing only your last {MAX_HOME_TRANSACTIONS} transactions
+        Your last {MAX_HOME_TRANSACTIONS} transactions
       </div>
       <div className="w-100 overflow-auto" style={{ minWidth: 0 }}>
         <TransactionTable
