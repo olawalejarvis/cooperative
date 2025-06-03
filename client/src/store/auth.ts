@@ -22,6 +22,7 @@ export type User = {
 interface AuthState {
   user: User | null;
   loading: boolean;
+  hasCheckedAuth: boolean;
   setUser: (user: User | null) => void;
   logout: (organizationName?: string) => void;
   login: (userName: string, password: string, organizationName?: string) => Promise<void>;
@@ -49,6 +50,7 @@ function isAxiosError(err: unknown): err is { response: { data?: { error?: strin
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   loading: false,
+  hasCheckedAuth: false,
   setUser: (user) => set({ user }),
   logout: async (organizationName): Promise<void> => {
     set({ loading: true });
@@ -56,7 +58,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const url = organizationName ? `/v1/organizations/${organizationName}/users/logout` : '/v1/users/logout';
       await axios.put(url); // withCredentials is global
     } finally {
-      set({ user: null, loading: false });
+      set({ user: null, loading: false, hasCheckedAuth: true });
     }
   },
   // Login function that handles both organization-specific and global login
@@ -65,9 +67,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const loginUrl = organizationName ? `/v1/organizations/${organizationName}/users/login` : '/v1/users/login';
       const res = await axios.post(loginUrl, { username, password }); // withCredentials is now global
-      set({ user: res.data.user, loading: false });
+      set({ user: res.data.user, loading: false, hasCheckedAuth: true });
     } catch (err) {
-      set({ user: null, loading: false });
+      set({ user: null, loading: false, hasCheckedAuth: true });
       throw err;
     }
   },
@@ -76,9 +78,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const url = organizationName ? `/v1/organizations/${organizationName}/users/me` : '/v1/users/me';
       const res = await axios.get(url);
-      set({ user: res.data, loading: false });
+      set({ user: res.data, loading: false, hasCheckedAuth: true });
     } catch {
-      set({ user: null, loading: false });
+      set({ user: null, loading: false, hasCheckedAuth: true });
     }
   },
   request2FACode: async (username, password, organizationName) => {

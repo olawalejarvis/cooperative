@@ -1,15 +1,12 @@
 import { Container, Dropdown, Spinner, Alert } from 'react-bootstrap';
-import AppNavBar from '../components/AppNavBar';
 import TransactionTable from '../components/TransactionTable';
 import type { Transaction } from '../store/transaction';
 import type { User } from '../store/auth';
-import type { Organization } from '../store/organization';
 import { UserPermission } from '../utils/UserPermission';
 import type { SortOrder } from '../types';
 
 interface TransactionsPageProps {
-  organization: Organization;
-  user: User;
+  user: User | null | undefined;
   transactions: Transaction[];
   loading: boolean;
   error: string | null | undefined;
@@ -18,15 +15,11 @@ interface TransactionsPageProps {
   onSortChange: (field: string, order: SortOrder) => void;
   filter: 'my' | 'org';
   onFilterChange: (filter: 'my' | 'org') => void;
-  onLogout: () => void;
-  onProfileUpdate: (firstName: string, lastName: string) => Promise<void>;
-  onOrganizationUpdate: (label: string) => Promise<void>;
   onRowClick?: (transaction: Transaction) => void;
 }
 
 export default function TransactionsPage(props: TransactionsPageProps) {
   const {
-    organization,
     user,
     transactions,
     loading,
@@ -36,23 +29,13 @@ export default function TransactionsPage(props: TransactionsPageProps) {
     onSortChange,
     filter,
     onFilterChange,
-    onLogout,
-    onProfileUpdate,
-    onOrganizationUpdate,
     onRowClick,
   } = props;
 
-  const canViewOrgTransactions = UserPermission.isAdmin(user.role);
+  const canViewOrgTransactions = UserPermission.isAdmin(user?.role);
 
   return (
     <>
-      <AppNavBar
-        organization={organization}
-        user={user}
-        onLogout={onLogout}
-        onProfileUpdate={onProfileUpdate}
-        onOrganizationUpdate={onOrganizationUpdate}
-      />
       <Container className="mt-5">
         <h2>Transactions</h2>
         <div className="d-flex align-items-center mb-3">

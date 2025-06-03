@@ -14,8 +14,9 @@ interface OrganizationProfileProps {
 }
 
 const OrganizationProfile: React.FC<OrganizationProfileProps> = ({ show, onHide, organization, userRole, onUpdate }) => {
+  console.log('OrganizationProfile rendered with organization:', organization);
   const [editMode, setEditMode] = useState(false);
-  const [label, setLabel] = useState(organization.label);
+  const [label, setLabel] = useState(organization?.label);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,7 +73,7 @@ const OrganizationProfile: React.FC<OrganizationProfileProps> = ({ show, onHide,
         </Form.Group>
         <Form.Group className="mb-3">
           <Form.Label>Name</Form.Label>
-          <Form.Control type="text" value={organization.name} readOnly />
+          <Form.Control type="text" value={organization?.name} readOnly />
         </Form.Group>
         <Form.Group className="mb-3">
           <Form.Label>ID</Form.Label>

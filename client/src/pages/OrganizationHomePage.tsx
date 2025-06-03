@@ -1,7 +1,4 @@
 import { Container, Spinner, Alert } from 'react-bootstrap';
-import AppNavBar from '../components/AppNavBar';
-import Login from '../components/Login';
-import Register from '../components/Register';
 import TransactionTable from '../components/TransactionTable';
 import type { Transaction } from '../store/transaction';
 import type { UserAggregate } from '../store/user';
@@ -9,23 +6,6 @@ import type { SortOrder } from '../types';
 import type { Organization } from '../store/organization';
 import type { User } from '../store/auth';
 
-function AuthSection({ showRegister, setShowRegister, organizationName }: { showRegister: boolean, setShowRegister: React.Dispatch<React.SetStateAction<boolean>>, organizationName?: string }) {
-  return (
-    <>
-      {showRegister
-        ? <Register orgName={organizationName} />
-        : <Login orgName={organizationName} />}
-      <div className="mt-3 text-center">
-        <button
-          className="btn btn-link"
-          onClick={() => setShowRegister((prev) => !prev)}
-        >
-          {showRegister ? 'Already have an account? Login' : 'New user? Register'}
-        </button>
-      </div>
-    </>
-  );
-}
 
 function UserDashboard({ userAggLoading, userAggError, aggregate, transactions, txLoading, txError, sortBy, sortOrder, handleSortChange }: {
   userAggLoading: boolean,
@@ -65,12 +45,7 @@ function UserDashboard({ userAggLoading, userAggError, aggregate, transactions, 
 interface OrganizationHomePageProps {
   organization?: Organization | null;
   organizationName?: string;
-  loading: boolean;
-  error: string | null;
   user?: User | null;
-  authLoading: boolean;
-  showRegister: boolean;
-  setShowRegister: React.Dispatch<React.SetStateAction<boolean>>;
   aggregate: UserAggregate | null;
   userAggLoading: boolean;
   userAggError: string | null | undefined;
@@ -80,21 +55,12 @@ interface OrganizationHomePageProps {
   sortBy: string;
   sortOrder: SortOrder;
   handleSortChange: (field: string, order: SortOrder) => void;
-  onLogout: () => void;
-  onProfileUpdate: (firstName: string, lastName: string) => Promise<void>;
-  onOrganizationUpdate: (label: string) => Promise<void>;
 }
 
 export default function OrganizationHomePage(props: OrganizationHomePageProps) {
   const {
     organization,
-    organizationName,
-    loading,
-    error,
     user,
-    authLoading,
-    showRegister,
-    setShowRegister,
     aggregate,
     userAggLoading,
     userAggError,
@@ -104,34 +70,12 @@ export default function OrganizationHomePage(props: OrganizationHomePageProps) {
     sortBy,
     sortOrder,
     handleSortChange,
-    onLogout,
-    onProfileUpdate,
-    onOrganizationUpdate,
   } = props;
-
-  if (authLoading || loading) return <Container className="mt-5"><Spinner animation="border" /></Container>;
-  if (error) return <Container className="mt-5"><Alert variant="danger">{error}</Alert></Container>;
-  if (!organization) return null;
 
   return (
     <>
-      <AppNavBar
-        organization={organization}
-        user={user}
-        onLogout={onLogout}
-        onProfileUpdate={onProfileUpdate}
-        onOrganizationUpdate={onOrganizationUpdate}
-      />
       <Container className="mt-5">
-        <p>{organization.description || 'No description available.'}</p>
-        {/* Auth section for login/register */}
-        {!user && (
-          <AuthSection
-            showRegister={showRegister}
-            setShowRegister={setShowRegister}
-            organizationName={organizationName}
-          />
-        )}
+        <p>{organization?.description || 'No description available.'}</p>
         {/* User dashboard for logged-in users */}
         {user && (
           <UserDashboard

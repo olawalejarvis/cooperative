@@ -8,7 +8,7 @@ import UserProfile from './UserProfile';
 import OrganizationProfile from './OrganizationProfile';
 
 export interface AppNavBarProps {
-  organization?: Organization;
+  organization?: Organization | null;
   user?: User | null;
   onLogout: () => void;
   onProfileUpdate: (firstName: string, lastName: string) => Promise<void>;
@@ -85,19 +85,21 @@ const AppNavBar: React.FC<AppNavBarProps> = (props) => {
             )}
           </Nav>
         </Navbar.Collapse>
-        <UserProfile
-          show={showProfile}
-          onHide={handleHideProfile}
-          user={user ?? { firstName: '', lastName: '' }}
-          onUpdate={props.onProfileUpdate}
-        />
-        <OrganizationProfile
-          show={showOrgModal}
-          onHide={handleHideOrgModal}
-          organization={organization!}
-          userRole={user?.role}
-          onUpdate={props.onOrganizationUpdate}
-        />
+        {organization && user && (<>
+          <UserProfile
+            show={showProfile}
+            onHide={handleHideProfile}
+            user={user ?? { firstName: '', lastName: '' }}
+            onUpdate={props.onProfileUpdate}
+          />
+          <OrganizationProfile
+            show={showOrgModal}
+            onHide={handleHideOrgModal}
+            organization={organization!}
+            userRole={user?.role}
+            onUpdate={props.onOrganizationUpdate}
+          />
+        </>)}
       </Container>
     </Navbar>
   );

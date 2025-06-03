@@ -1,65 +1,55 @@
 import React, { useState } from 'react';
 import { Form, Button, Alert, Container, Row, Col, Spinner } from 'react-bootstrap';
-import { useOrganizationStore } from '../store/organization';
 
-interface RegisterProps {
+// ...other imports
+
+export interface RegisterProps {
   orgName?: string;
+  error?: string | null;
+  success?: boolean;
+  loading?: boolean;
+  onSubmit: (formData: {
+    firstName: string;
+    lastName: string;
+    userName: string;
+    email: string;
+    password: string;
+    phoneNumber: string;
+  }) => Promise<void>;
+  // other props...
 }
 
-const Register: React.FC<RegisterProps> = ({ orgName }) => {
+const Register: React.FC<RegisterProps> = ({ onSubmit, error, success, loading }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [userName, setUserName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
-  const registerUser = useOrganizationStore((state) => state.registerUser);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(false);
-    setLoading(true);
-    try {
-      await registerUser({
-        firstName,
-        lastName,
-        userName,
-        email,
-        password,
-        phoneNumber,
-        orgName,
-      });
-      setSuccess(true);
-      setFirstName('');
-      setLastName('');
-      setUserName('');
-      setEmail('');
-      setPassword('');
-      setPhoneNumber('');
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message || 'Registration failed');
-      } else if (typeof err === 'object' && err && 'response' in err) {
-        const errorObj = err as { response?: { data?: { error?: string } } };
-        setError(errorObj.response?.data?.error || 'Registration failed');
-      } else {
-        setError('Registration failed');
-      }
-    } finally {
-      setLoading(false);
-    }
+    onSubmit({
+      firstName,
+      lastName,
+      userName,
+      email,
+      password,
+      phoneNumber,
+    });
+    setFirstName('');
+    setLastName('');
+    setUserName('');
+    setEmail('');
+    setPassword('');
+    setPhoneNumber('');
   };
 
   return (
     <Container className="mt-5">
       <Row className="justify-content-center">
         <Col md={6} lg={4}>
-          <h2 className="mb-4">Register</h2>
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3" controlId="firstName">
               <Form.Label>First Name</Form.Label>
