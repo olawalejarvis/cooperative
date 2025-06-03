@@ -40,7 +40,7 @@ export default function TransactionsPage(props: TransactionsPageProps) {
   return (
     <>
       <Container className="mt-5">
-        <div className="transactions-header d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-3">
+        <div className="transactions-top-card shadow-sm rounded-4 p-4 mb-4 bg-white d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 position-relative">
           <div>
             <h2 className="transactions-title mb-1">Transactions</h2>
             <div className="transactions-subtitle text-muted" style={{ fontSize: '1.04rem' }}>
@@ -49,8 +49,8 @@ export default function TransactionsPage(props: TransactionsPageProps) {
           </div>
           <div className="transactions-filter-dropdown">
             <Dropdown onSelect={(val) => onFilterChange(val as 'my' | 'org')}>
-              <Dropdown.Toggle variant="outline-primary" id="filter-dropdown" className="rounded-pill px-4 fw-semibold shadow-sm" style={{ fontSize: '1.01rem', background: '#f6f8fa', color: '#3b82f6', border: '1.5px solid #e0eafc' }}>
-                <svg width="18" height="18" fill="#3b82f6" viewBox="0 0 16 16" className="me-2"><path d="M6 10.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm3-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5z"/></svg>
+              <Dropdown.Toggle variant="outline-primary" id="filter-dropdown" className="transactions-filter-toggle rounded-pill px-5 py-3 fw-semibold shadow-sm d-flex align-items-center gap-2" style={{ fontSize: '1.08rem', background: '#f6f8fa', color: '#2563eb', border: '2px solid #3b82f6', minWidth: 210 }}>
+                <svg width="22" height="22" fill="#3b82f6" viewBox="0 0 16 16" className="me-2"><path d="M6 10.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm3-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5z"/></svg>
                 {filter === 'my' ? 'My Transactions' : 'Org Transactions'}
               </Dropdown.Toggle>
               <Dropdown.Menu className="transactions-dropdown-menu">
@@ -59,6 +59,7 @@ export default function TransactionsPage(props: TransactionsPageProps) {
               </Dropdown.Menu>
             </Dropdown>
           </div>
+          <div className="transactions-top-divider position-absolute w-100 start-0" style={{ bottom: '-18px', left: 0 }} />
         </div>
         {loading ? (
           <Spinner animation="border" />

@@ -1,0 +1,62 @@
+.orgusers-container {
+  background: #f6f8fa;
+  border-radius: 16px;
+  padding: 2.2rem 1.5rem 1.5rem 1.5rem;
+}
+.orgusers-header {
+  gap: 1.5rem;
+}
+.orgusers-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #222;
+  letter-spacing: -1px;
+}
+.orgusers-subtitle {
+  font-size: 1.04rem;
+  color: #6b7280;
+  margin-top: 0.1rem;
+}
+.orgusers-filter-dropdown .form-select {
+  background: #f6f8fa !important;
+  color: #3b82f6 !important;
+  border: 1.5px solid #e0eafc !important;
+  border-radius: 999px !important;
+  font-weight: 600;
+  font-size: 1.01rem;
+  box-shadow: 0 2px 8px rgba(80,120,200,0.07);
+  padding: 0.55rem 1.5rem;
+  min-width: 170px;
+}
+.orgusers-action-btn {
+  border-radius: 999px !important;
+  font-weight: 600;
+  font-size: 0.98rem;
+  box-shadow: 0 1px 4px rgba(80,120,200,0.07);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.orgusers-modal-body {
+  background: #f6f8fa;
+  border-radius: 16px;
+  padding: 2.2rem 1.5rem 1.5rem 1.5rem;
+}
+@media (max-width: 600px) {
+  .orgusers-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.7rem;
+  }
+  .orgusers-title {
+    font-size: 1.25rem;
+  }
+  .orgusers-filter-dropdown .form-select {
+    font-size: 0.98rem;
+    padding: 0.45rem 1.1rem;
+    min-width: 120px;
+  }
+  .orgusers-modal-body {
+    padding: 1.1rem 0.3rem 0.7rem 0.3rem;
+  }
+}
