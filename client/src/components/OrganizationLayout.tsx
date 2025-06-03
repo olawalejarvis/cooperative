@@ -2,6 +2,7 @@ import React from 'react';
 import AppNavBar from '../components/AppNavBar';
 import { useOrganizationStore } from '../store/organization';
 import { useAuthStore } from '../store/auth';
+import Footer from './Footer';
 
 interface OrganizationLayoutProps {
   children: React.ReactNode;
@@ -38,6 +39,8 @@ const OrganizationLayout: React.FC<OrganizationLayoutProps> = ({ children }) => 
         onOrganizationUpdate={handleOrganizationUpdate}
       />
       {children}
+      <div style={{ flex: 1 }} />
+      <Footer organization={organization} />
     </>
   );
 };

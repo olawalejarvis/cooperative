@@ -6,6 +6,7 @@ import { useUserStore } from '../store/user';
 import { useTransactionStore } from '../store/transaction';
 import { useSortState } from '../hooks/useSortState';
 import OrganizationHomePage from './OrganizationHomePage';
+import { withAuth } from '../components/withAuth';
 
 export function OrganizationHomeContainer() {
   const { organizationName } = useParams<{ organizationName: string }>();
@@ -45,3 +46,7 @@ export function OrganizationHomeContainer() {
     />
   );
 }
+
+export const AuthOrganizationHome = withAuth(OrganizationHomeContainer);
+
+// export default withAuth(OrganizationHomeContainer);

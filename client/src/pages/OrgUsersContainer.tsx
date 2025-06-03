@@ -4,8 +4,9 @@ import { useUserStore } from '../store/user';
 import { useAuthStore } from '../store/auth';
 import { UserPermission } from '../utils/UserPermission';
 import { useParams } from 'react-router-dom';
+import { withRequireAdmin } from '../components/withRequireAdmin';
 
-const OrgUsersContainer: React.FC = () => {
+export const OrgUsersContainer: React.FC = () => {
   const { organizationName } = useParams<{ organizationName: string }>();
   const orgName = organizationName || '';
   const [filter, setFilter] = useState<'org' | 'all'>('org');
@@ -45,4 +46,4 @@ const OrgUsersContainer: React.FC = () => {
   );
 };
 
-export default OrgUsersContainer;
+export const AuthOrgsUsers = withRequireAdmin(OrgUsersContainer);

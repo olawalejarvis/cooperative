@@ -16,6 +16,8 @@ interface TransactionsPageProps {
   filter: 'my' | 'org';
   onFilterChange: (filter: 'my' | 'org') => void;
   onRowClick?: (transaction: Transaction) => void;
+  onEndReached?: () => void;
+  loadingMore?: boolean;
 }
 
 export default function TransactionsPage(props: TransactionsPageProps) {
@@ -62,6 +64,8 @@ export default function TransactionsPage(props: TransactionsPageProps) {
             sortOrder={sortOrder}
             onSortChange={onSortChange}
             onRowClick={onRowClick}
+            onEndReached={props.onEndReached}
+            loadingMore={props.loadingMore}
           />
         )}
       </Container>

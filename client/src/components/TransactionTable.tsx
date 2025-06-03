@@ -16,9 +16,11 @@ interface TransactionTableProps {
   sortOrder: SortOrder;
   onSortChange: (sortBy: string, sortOrder: SortOrder) => void;
   onRowClick?: (transaction: Transaction) => void;
+  onEndReached?: () => void;
+  loadingMore?: boolean;
 }
 
-const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, loading, error, sortBy, sortOrder, onSortChange, onRowClick }) => {
+const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, loading, error, sortBy, sortOrder, onSortChange, onRowClick, onEndReached, loadingMore }) => {
   const handleSort = (field: string) => {
     const newOrder: SortOrder = sortBy === field && sortOrder === 'asc' ? 'desc' : 'asc';
     onSortChange(field, newOrder);
@@ -133,7 +135,9 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, loadi
         sortOrder={sortOrder}
         onSortChange={handleSort}
         onRowClick={handleView as (row: Record<string, unknown>) => void}
+        onEndReached={onEndReached}
       />
+      {loadingMore && <div style={{ textAlign: 'center', margin: '1rem' }}><span className="spinner-border spinner-border-sm" /></div>}
       <CAModal
         show={showModal}
         onHide={() => setShowModal(false)}

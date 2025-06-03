@@ -6,10 +6,9 @@ import { AuthTransactionsContainer } from './pages/TransactionsContainer';
 import { AppInitializer } from './AppInitializer';
 import OrganizationLoginPage from './pages/OrganizationLoginPage';
 import OrganizationRegisterPage from './pages/OrganizationRegisterPage';
-import { OrganizationHomeContainer } from './pages/OrganizationHomeContainer';
+import { AuthOrganizationHome } from './pages/OrganizationHomeContainer';
 import OrganizationLayout from './components/OrganizationLayout';
-import OrgUsersContainer from './pages/OrgUsersContainer';
-import RequireAdmin from './components/RequireAdmin';
+import { AuthOrgsUsers } from './pages/OrgUsersContainer';
 import OrganizationsContainer from './pages/OrganizationsContainer';
 
 function App() {
@@ -32,7 +31,7 @@ function App() {
             } />
             <Route path="/:organizationName" element={
               <OrganizationLayout>
-                <OrganizationHomeContainer />
+                <AuthOrganizationHome />
               </OrganizationLayout>
             } />
             <Route path="/:organizationName/transactions" element={
@@ -52,9 +51,7 @@ function App() {
             } />
             <Route path="/:organizationName/users" element={
               <OrganizationLayout>
-                <RequireAdmin>
-                  <OrgUsersContainer />
-                </RequireAdmin>
+                  <AuthOrgsUsers />
               </OrganizationLayout>
             } />
             <Route path="/:orgName/organizations" element={

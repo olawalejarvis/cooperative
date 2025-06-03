@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import React, { useEffect } from 'react';
 import { UserPermission } from '../utils/UserPermission';
 
-export function withRequireRoot<P extends object>(Component: React.ComponentType<P>) {
+export function withRequireAdmin<P extends object>(Component: React.ComponentType<P>) {
   const Wrapped: React.FC<P> = (props) => {
     const { user, loading } = useAuthStore();
     const navigate = useNavigate();
@@ -19,11 +19,11 @@ export function withRequireRoot<P extends object>(Component: React.ComponentType
     }, [user, loading, navigate, location]);
 
     if (loading) return <div>Loading...</div>;
-    if (!user || !UserPermission.isRootUser(user.role)) return <div className="alert alert-danger">Access denied: Root users only</div>;
+    if (!user || !UserPermission.isAdmin(user.role)) return <div className="alert alert-danger">Access denied: Admins only</div>;
 
     return <Component {...props} />;
   };
 
-  Wrapped.displayName = `withRequireRoot(${Component.displayName || Component.name || 'Component'})`;
+  Wrapped.displayName = `withRequireAdmin(${Component.displayName || Component.name || 'Component'})`;
   return Wrapped;
 }

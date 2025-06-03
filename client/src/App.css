@@ -1,6 +1,36 @@
+/*
+  Coop App Main Styles
+  - Uses flex column layout to keep footer at the bottom
+  - #root is centered and has max width
+  - main/.main-content can grow to fill space
+*/
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body, #root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#root > * {
+  flex-shrink: 0;
+}
+
 #root {
-  max-width: 1280px;
+  /* Remove max-width and center alignment to allow full width */
+  width: 100%;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  box-sizing: border-box;
+}
+
+/* Optional: make main content grow to fill space */
+main, .main-content {
+  flex: 1 0 auto;
 }

@@ -59,6 +59,7 @@ const OrgUsersPage: React.FC<OrgUsersPageProps> = ({
     { key: 'email', label: 'Email', sortBy: true },
     { key: 'role', label: 'Role', sortBy: true },
     { key: 'createdAt', label: 'Created At', sortBy: true, render: (row) => new Date(row.createdAt as string).toLocaleString() },
+    { key: 'isActive', label: 'Active', sortBy: true, render: (row) => row.isActive ? 'Yes' : 'No' },
     { key: 'actions', label: 'Actions', sortBy: false, render: (row) => {
       const orgUser = row as unknown as OrgUser;
       return (

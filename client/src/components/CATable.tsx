@@ -1,4 +1,5 @@
 import { Table as BootstrapTable, Spinner, Alert } from 'react-bootstrap';
+import { useRef, useCallback } from 'react';
 
 export type TableColumn<T> = { key: keyof T & string; label: string; sortBy?: boolean; render?: (row: T) => React.ReactNode };
 
@@ -22,7 +23,20 @@ export function CATable<T extends Record<string, unknown>>({
   sortOrder,
   onSortChange,
   onRowClick,
-}: TableProps<T>) {
+  onEndReached,
+}: TableProps<T> & { onEndReached?: () => void }) {
+  const tableBodyRef = useRef<HTMLTableSectionElement>(null);
+  const scrollableDivRef = useRef<HTMLDivElement>(null);
+
+  // Lazy scroll handler
+  const handleScroll = useCallback(() => {
+    const el = tableBodyRef.current;
+    if (!el || !onEndReached) return;
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 50) {
+      onEndReached();
+    }
+  }, [onEndReached]);
+
   if (loading) return <Spinner animation="border" />;
 
   if (error) return <Alert variant="danger">{error}</Alert>;
@@ -36,7 +50,7 @@ export function CATable<T extends Record<string, unknown>>({
     }
   };
 
-  return (
+  const table = (
     <BootstrapTable striped bordered hover responsive>
       <thead>
         <tr>
@@ -51,7 +65,9 @@ export function CATable<T extends Record<string, unknown>>({
           ))}
         </tr>
       </thead>
-      <tbody>
+      <tbody
+        ref={tableBodyRef}
+      >
         {data.map((item, index) => (
           <tr key={index} onClick={onRowClick ? () => onRowClick(item) : undefined} style={onRowClick ? { cursor: 'pointer' } : {}}>
             {columns.map(col => (
@@ -64,5 +80,20 @@ export function CATable<T extends Record<string, unknown>>({
       </tbody>
     </BootstrapTable>
   );
+
+  if (onEndReached) {
+    // Wrap in scrollable div and attach scroll handler
+    return (
+      <div
+        style={{ maxHeight: 400, overflowY: 'auto' }}
+        onScroll={handleScroll}
+        ref={scrollableDivRef}
+      >
+        {table}
+      </div>
+    );
+  }
+
+  return table;
 }
 

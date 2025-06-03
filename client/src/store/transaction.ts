@@ -13,12 +13,20 @@ export interface Transaction extends Record<string, unknown> {
   // Add more fields as needed
 }
 
+export interface TransactionPage {
+  data: Transaction[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 interface TransactionState {
   transactions: Transaction[];
   loading: boolean;
   error: string | null;
-  fetchMyTransactions: (options?: { sortBy?: string; sortOrder?: 'asc' | 'desc' }) => Promise<void>;
-  fetchAllTransactions: (options?: { sortBy?: string; sortOrder?: 'asc' | 'desc' }) => Promise<void>;
+  fetchMyTransactions: (options?: { sortBy?: string; sortOrder?: 'asc' | 'desc'; limit?: number; page?: number }) => Promise<TransactionPage | undefined>;
+  fetchAllTransactions: (options?: { sortBy?: string; sortOrder?: 'asc' | 'desc'; limit?: number; page?: number }) => Promise<TransactionPage | undefined>;
   updateTransactionStatus: (id: string, status: string) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
 }
@@ -27,15 +35,19 @@ export const useTransactionStore = create<TransactionState>((set) => ({
   transactions: [],
   loading: false,
   error: null,
-  fetchMyTransactions: async (options) => {
+  fetchMyTransactions: async (options): Promise<TransactionPage | undefined> => {
     set({ loading: true, error: null });
     try {
       let url = '/v1/transactions/me';
-      if (options?.sortBy && options?.sortOrder) {
-        url += `?sortBy=${options.sortBy}&sortOrder=${options.sortOrder}`;
-      }
+      const params = new URLSearchParams();
+      if (options?.sortBy) params.append('sortBy', options.sortBy);
+      if (options?.sortOrder) params.append('sortOrder', options.sortOrder);
+      if (options?.limit) params.append('limit', String(options.limit));
+      if (options?.page) params.append('page', String(options.page));
+      if (Array.from(params).length) url += `?${params.toString()}`;
       const res = await axios.get(url);
       set({ transactions: res.data.data, loading: false });
+      return res.data; // Return full response for pagination
     } catch (err) {
       if (typeof err === 'object' && err !== null && 'response' in err) {
         const errorObj = err as { response?: { data?: { error?: string } }, message?: string };
@@ -45,17 +57,22 @@ export const useTransactionStore = create<TransactionState>((set) => ({
       } else {
         set({ error: 'Unknown error', loading: false });
       }
+      return undefined;
     }
   },
-  fetchAllTransactions: async (options) => {
+  fetchAllTransactions: async (options): Promise<TransactionPage | undefined> => {
     set({ loading: true, error: null });
     try {
       let url = '/v1/transactions';
-      if (options?.sortBy && options?.sortOrder) {
-        url += `?sortBy=${options.sortBy}&sortOrder=${options.sortOrder}`;
-      }
+      const params = new URLSearchParams();
+      if (options?.sortBy) params.append('sortBy', options.sortBy);
+      if (options?.sortOrder) params.append('sortOrder', options.sortOrder);
+      if (options?.limit) params.append('limit', String(options.limit));
+      if (options?.page) params.append('page', String(options.page));
+      if (Array.from(params).length) url += `?${params.toString()}`;
       const res = await axios.get(url);
       set({ transactions: res.data.data, loading: false });
+      return res.data; // Return full response for pagination
     } catch (err) {
       if (typeof err === 'object' && err !== null && 'response' in err) {
         const errorObj = err as { response?: { data?: { error?: string } }, message?: string };
@@ -65,6 +82,7 @@ export const useTransactionStore = create<TransactionState>((set) => ({
       } else {
         set({ error: 'Unknown error', loading: false });
       }
+      return undefined;
     }
   },
   updateTransactionStatus: async (id: string, status: string) => {

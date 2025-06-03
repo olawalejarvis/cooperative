@@ -1,27 +1,75 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuthStore } from '../store/auth';
 import { useTransactionStore } from '../store/transaction';
 import { useSortState } from '../hooks/useSortState';
 import TransactionsPage from './TransactionsPage';
 import TransactionModal from '../components/TransactionModal';
-import type { Transaction } from '../store/transaction';
+import type { Transaction, TransactionPage } from '../store/transaction';
 import { withAuth } from '../components/withAuth';
 
 export function TransactionsContainer() {
   const { user } = useAuthStore();
-  const { transactions, loading, error, fetchMyTransactions, fetchAllTransactions } = useTransactionStore();
+  const { loading, error, fetchMyTransactions, fetchAllTransactions } = useTransactionStore();
   const { sortBy, sortOrder, handleSortChange } = useSortState('createdAt', 'desc');
   const [filter, setFilter] = useState<'my' | 'org'>('my');
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showModal, setShowModal] = useState(false);
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+  const isInitialLoad = useRef(true);
+
+  // Initial load or filter/sort change
   useEffect(() => {
-    if (filter === 'my') {
-      fetchMyTransactions({ sortBy, sortOrder });
-    } else {
-      fetchAllTransactions({ sortBy, sortOrder });
+    let ignore = false;
+    async function load() {
+      setPage(1);
+      setAllTransactions([]);
+      isInitialLoad.current = true;
+      setLoadingMore(true);
+      let result: TransactionPage | undefined;
+      if (filter === 'my') {
+        result = await fetchMyTransactions({ sortBy, sortOrder, limit: 20, page: 1 });
+      } else {
+        result = await fetchAllTransactions({ sortBy, sortOrder, limit: 20, page: 1 });
+      }
+      if (!ignore) {
+        setAllTransactions(result?.data || []);
+        setTotalPages(result?.totalPages || 1);
+        setLoadingMore(false);
+      }
     }
-  }, [filter, fetchMyTransactions, fetchAllTransactions, sortBy, sortOrder]);
+    load();
+    return () => { ignore = true; };
+  }, [filter, sortBy, sortOrder, fetchMyTransactions, fetchAllTransactions]);
+
+  // Append new transactions when page increases
+  useEffect(() => {
+    if (page === 1 || isInitialLoad.current) {
+      isInitialLoad.current = false;
+      return;
+    }
+    let ignore = false;
+    async function loadMore() {
+      setLoadingMore(true);
+      let result: TransactionPage | undefined;
+      if (filter === 'my') {
+        result = await fetchMyTransactions({ sortBy, sortOrder, limit: 20, page });
+      } else {
+        result = await fetchAllTransactions({ sortBy, sortOrder, limit: 20, page });
+      }
+      if (!ignore) {
+        setAllTransactions(prev => [...prev, ...(result?.data || [])]);
+        setTotalPages(result?.totalPages || totalPages);
+        setLoadingMore(false);
+      }
+    }
+    loadMore();
+    return () => { ignore = true; };
+  }, [page, filter, sortBy, sortOrder, fetchMyTransactions, fetchAllTransactions, totalPages]);
 
   const handleRowClick = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
@@ -32,17 +80,23 @@ export function TransactionsContainer() {
     setSelectedTransaction(null);
   };
   const handleUpdateStatus = async (id: string, status: string) => {
-    // Call update transaction API here (to be implemented in store next)
     await useTransactionStore.getState().updateTransactionStatus(id, status);
     setShowModal(false);
   };
+
+  // Lazy scroll handler
+  const onEndReached = useCallback(() => {
+    if (!loadingMore && page < totalPages) {
+      setPage(p => p + 1);
+    }
+  }, [loadingMore, page, totalPages]);
 
   return (
     <>
       <TransactionsPage
         user={user}
-        transactions={transactions}
-        loading={loading}
+        transactions={allTransactions}
+        loading={loading && page === 1}
         error={error}
         sortBy={sortBy}
         sortOrder={sortOrder}
@@ -50,6 +104,8 @@ export function TransactionsContainer() {
         filter={filter}
         onFilterChange={setFilter}
         onRowClick={handleRowClick}
+        onEndReached={onEndReached}
+        loadingMore={loadingMore}
       />
       <TransactionModal
         show={showModal}
