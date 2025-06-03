@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { CAModal } from './CAModal';
 import { Button, Form } from 'react-bootstrap';
-import { UserPermission } from '../utils/UserPermission';
 import type { Organization } from '../store/organization';
+import './OrganizationProfile.css';
 
 interface OrganizationProfileProps {
   show: boolean;
@@ -14,18 +14,17 @@ interface OrganizationProfileProps {
 }
 
 const OrganizationProfile: React.FC<OrganizationProfileProps> = ({ show, onHide, organization, userRole, onUpdate }) => {
-  console.log('OrganizationProfile rendered with organization:', organization);
   const [editMode, setEditMode] = useState(false);
   const [label, setLabel] = useState(organization?.label);
+  const [description, setDescription] = useState(organization?.description || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const isSuperAdmin = UserPermission.isSuperAdmin(userRole);
 
   const handleEdit = () => setEditMode(true);
   const handleCancel = () => {
     setEditMode(false);
     setLabel(organization.label);
+    setDescription(organization.description || '');
     setError(null);
   };
   const handleUpdate = async () => {
@@ -45,21 +44,37 @@ const OrganizationProfile: React.FC<OrganizationProfileProps> = ({ show, onHide,
     <CAModal
       show={show}
       onHide={onHide}
-      title="Organization Info"
+      title="Organization Profile"
+      size="lg"
+      bodyClassName="orgprofile-modal-body ca-modal-scrollable"
       footer={editMode ? (
-        <>
-          <Button variant="secondary" onClick={handleCancel} disabled={loading}>Cancel</Button>
-          <Button variant="primary" onClick={handleUpdate} disabled={loading}>
+        <div className="d-flex gap-2 justify-content-end">
+          <Button variant="outline-secondary" className="rounded-pill px-4" onClick={handleCancel} disabled={loading}>Cancel</Button>
+          <Button variant="primary" className="rounded-pill px-4" onClick={handleUpdate} disabled={loading} style={{ background: '#3b82f6', border: 'none' }}>
             {loading ? 'Updating...' : 'Update'}
           </Button>
-        </>
+        </div>
       ) : (
-        isSuperAdmin && <Button variant="primary" onClick={handleEdit}>Edit</Button>
+        <Button variant="primary" className="rounded-pill px-4" onClick={handleEdit} style={{ background: '#3b82f6', border: 'none' }}>Edit</Button>
       )}
-      bodyClassName="ca-modal-scrollable"
-      size="lg"
     >
-      <Form>
+      <div className="orgprofile-avatar-wrapper mb-4 d-flex flex-column align-items-center justify-content-center">
+        <div className="orgprofile-avatar mb-2">
+          <span>{organization.label ? organization.label[0] : 'O'}</span>
+        </div>
+        <div className="fw-bold" style={{ fontSize: '1.15rem', color: '#3b82f6' }}>{organization.label}</div>
+        <div className="text-muted" style={{ fontSize: '0.98rem' }}>{organization.name}</div>
+      </div>
+      <Form className="orgprofile-form mx-auto" style={{ maxWidth: 420 }}>
+        <Form.Group className="mb-3">
+          <Form.Label>Organization Name</Form.Label>
+          <Form.Control
+            type="text"
+            value={organization.name}
+            readOnly
+            className="orgprofile-input"
+          />
+        </Form.Group>
         <Form.Group className="mb-3">
           <Form.Label>Label</Form.Label>
           <Form.Control
@@ -67,17 +82,23 @@ const OrganizationProfile: React.FC<OrganizationProfileProps> = ({ show, onHide,
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             readOnly={!editMode}
-            // Only superAdmins can edit
-            disabled={!editMode || !isSuperAdmin}
+            className="orgprofile-input"
           />
         </Form.Group>
         <Form.Group className="mb-3">
-          <Form.Label>Name</Form.Label>
-          <Form.Control type="text" value={organization?.name} readOnly />
+          <Form.Label>Description</Form.Label>
+          <Form.Control
+            as="textarea"
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            readOnly={!editMode}
+            className="orgprofile-input"
+          />
         </Form.Group>
         <Form.Group className="mb-3">
-          <Form.Label>ID</Form.Label>
-          <Form.Control type="text" value={organization.id} readOnly />
+          <Form.Label>Role</Form.Label>
+          <Form.Control type="text" value={userRole || ''} readOnly className="orgprofile-input" />
         </Form.Group>
         {error && <div className="text-danger mb-2">{error}</div>}
       </Form>

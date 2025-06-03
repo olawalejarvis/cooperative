@@ -1,0 +1,57 @@
+.app-navbar-financial {
+  background: #fff !important;
+  border-bottom: 1.5px solid #e0eafc;
+  box-shadow: 0 2px 12px rgba(80,120,200,0.07);
+  min-height: 60px;
+  z-index: 100;
+}
+.app-navbar-brand {
+  font-size: 1.25rem;
+  color: #3b82f6 !important;
+  letter-spacing: -0.5px;
+  font-weight: 700 !important;
+}
+.app-navbar-brand svg {
+  display: inline-block;
+  vertical-align: middle;
+}
+.avatar-circle {
+  background: linear-gradient(90deg, #e0eafc 0%, #cfdef3 100%);
+  color: #3b82f6;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 8px rgba(80,120,200,0.10);
+}
+.app-navbar-dropdown .dropdown-menu {
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(80,120,200,0.07);
+  border: 1px solid #e0eafc;
+  min-width: 210px;
+}
+.app-navbar-dropdown .dropdown-item {
+  font-size: 1.04rem;
+  padding: 0.7rem 1.1rem;
+  color: #222;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.app-navbar-dropdown .dropdown-item:hover, .app-navbar-dropdown .dropdown-item:focus {
+  background: #e0eafc;
+  color: #2563eb;
+}
+@media (max-width: 600px) {
+  .app-navbar-brand {
+    font-size: 1.05rem;
+  }
+  .avatar-circle {
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+  }
+}

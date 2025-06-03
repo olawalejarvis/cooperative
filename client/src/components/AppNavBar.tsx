@@ -6,6 +6,7 @@ import type { Organization } from '../store/organization';
 import type { User } from '../store/auth';
 import UserProfile from './UserProfile';
 import OrganizationProfile from './OrganizationProfile';
+import './AppNavBar.css';
 
 export interface AppNavBarProps {
   organization?: Organization | null;
@@ -31,10 +32,11 @@ const AppNavBar: React.FC<AppNavBarProps> = (props) => {
   };
 
   return (
-    <Navbar collapseOnSelect expand="md" bg="dark" variant="dark" sticky="top">
+    <Navbar collapseOnSelect expand="md" bg="white" variant="light" sticky="top" className="app-navbar-financial shadow-sm py-2">
       <Container>
-        <Navbar.Brand as={Link} to={`/${organization?.name || ''}`}>
-          {organization?.label}
+        <Navbar.Brand as={Link} to={`/${organization?.name || ''}`} className="fw-bold d-flex align-items-center app-navbar-brand">
+          <svg width="28" height="28" fill="#3b82f6" viewBox="0 0 24 24" className="me-2"><circle cx="12" cy="12" r="10" fill="#e0eafc"/><path d="M7 13l3 3 7-7" stroke="#3b82f6" strokeWidth="2.5" fill="none" strokeLinecap="round"/></svg>
+          <span>{organization?.label}</span>
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="responsive-navbar-nav" />
         <Navbar.Collapse id="responsive-navbar-nav">
@@ -60,8 +62,10 @@ const AppNavBar: React.FC<AppNavBarProps> = (props) => {
             {user && (
               <NavDropdown
                 id="nav-dropdown-dark-example"
-                title={`${user.firstName} ${user.lastName}`}
-                menuVariant="dark"
+                title={<span className="d-flex align-items-center"><span className="avatar-circle me-2">{user.firstName[0]}{user.lastName[0]}</span>{user.firstName} {user.lastName}</span>}
+                menuVariant="light"
+                className="app-navbar-dropdown"
+                align="end"
               >
                 <NavDropdown.Item
                   href="#action/3.1"

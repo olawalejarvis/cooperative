@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Modal, Button, Form } from 'react-bootstrap';
+import { Button, Form } from 'react-bootstrap';
 import type { Transaction } from '../store/transaction';
 import { UserPermission } from '../utils/UserPermission';
+import { CAModal } from './CAModal';
+import './TransactionModal.css';
 
 interface TransactionModalProps {
   show: boolean;
@@ -54,40 +56,57 @@ export default function TransactionModal({ show, onHide, transaction, userRole, 
   if (!transaction) return null;
 
   return (
-    <Modal show={show} onHide={onHide} size="md" centered>
-      <Modal.Header closeButton>
-        <Modal.Title>Transaction Details</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <div><strong>ID:</strong> {transaction.id}</div>
-        <div><strong>Amount:</strong> {transaction.formattedAmount || transaction.amount}</div>
-        <div><strong>Type:</strong> {transaction.type}</div>
-        <div><strong>Method:</strong> {transaction.method}</div>
-        <div><strong>Created At:</strong> {transaction.createdAt}</div>
-        <div><strong>Status:</strong> {editMode ? (
-          <Form.Select value={status} onChange={e => setStatus(e.target.value)} disabled={!isAdmin || loading}>
-            {statusOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </Form.Select>
-        ) : (
-          <span>{transaction.status}</span>
-        )}</div>
+    <CAModal show={show} onHide={onHide} size="lg" title="Transaction Details" bodyClassName="transaction-modal-body" footer={null}>
+      <div className="transaction-modal-content">
+        <div className="transaction-modal-row mb-2">
+          <span className="transaction-modal-label">ID:</span>
+          <span className="transaction-modal-value">{transaction.id}</span>
+        </div>
+        <div className="transaction-modal-row mb-2">
+          <span className="transaction-modal-label">Amount:</span>
+          <span className="transaction-modal-value">{transaction.formattedAmount || transaction.amount}</span>
+        </div>
+        <div className="transaction-modal-row mb-2">
+          <span className="transaction-modal-label">Type:</span>
+          <span className="transaction-modal-value">{transaction.type}</span>
+        </div>
+        <div className="transaction-modal-row mb-2">
+          <span className="transaction-modal-label">Method:</span>
+          <span className="transaction-modal-value">{transaction.method}</span>
+        </div>
+        <div className="transaction-modal-row mb-2">
+          <span className="transaction-modal-label">Created At:</span>
+          <span className="transaction-modal-value">{transaction.createdAt}</span>
+        </div>
+        <div className="transaction-modal-row mb-2">
+          <span className="transaction-modal-label">Status:</span>
+          <span className="transaction-modal-value">
+            {editMode ? (
+              <Form.Select value={status} onChange={e => setStatus(e.target.value)} disabled={!isAdmin || loading} className="transaction-modal-select">
+                {statusOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </Form.Select>
+            ) : (
+              <span>{transaction.status}</span>
+            )}
+          </span>
+        </div>
         {error && <div className="text-danger mt-2">{error}</div>}
-      </Modal.Body>
-      <Modal.Footer>
+      </div>
+      <div className="transaction-modal-footer d-flex gap-2 justify-content-end mt-3">
         {editMode ? (
           <>
-            <Button variant="secondary" onClick={handleCancel} disabled={loading}>Cancel</Button>
-            <Button variant="primary" onClick={handleUpdate} disabled={loading || !isAdmin}>
+            <Button variant="outline-secondary" className="rounded-pill px-4" onClick={handleCancel} disabled={loading}>Cancel</Button>
+            <Button variant="primary" className="rounded-pill px-4" onClick={handleUpdate} disabled={loading || !isAdmin} style={{ background: '#3b82f6', border: 'none' }}>
               {loading ? 'Updating...' : 'Update'}
             </Button>
           </>
         ) : (
-          isAdmin && <Button variant="primary" onClick={handleEdit}>Edit</Button>
+          isAdmin && <Button variant="primary" className="rounded-pill px-4" onClick={handleEdit} style={{ background: '#3b82f6', border: 'none' }}>Edit</Button>
         )}
-        <Button variant="outline-secondary" onClick={onHide}>Close</Button>
-      </Modal.Footer>
-    </Modal>
+        <Button variant="outline-secondary" className="rounded-pill px-4" onClick={onHide}>Close</Button>
+      </div>
+    </CAModal>
   );
 }

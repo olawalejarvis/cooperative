@@ -1,0 +1,54 @@
+.orgprofile-modal-body {
+  background: #f6f8fa;
+  border-radius: 16px;
+  padding-top: 2.2rem;
+  padding-bottom: 2.2rem;
+}
+.orgprofile-avatar-wrapper {
+  margin-bottom: 1.5rem;
+}
+.orgprofile-avatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #e0eafc 0%, #cfdef3 100%);
+  color: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.1rem;
+  font-weight: 700;
+  box-shadow: 0 2px 12px rgba(80,120,200,0.10);
+  margin-bottom: 0.5rem;
+}
+.orgprofile-form {
+  background: #fff;
+  border-radius: 14px;
+  padding: 2rem 1.2rem 1.2rem 1.2rem;
+  box-shadow: 0 2px 12px rgba(80,120,200,0.07);
+}
+.orgprofile-input {
+  border-radius: 8px !important;
+  font-size: 1.04rem;
+  background: #f6f8fa;
+  border: 1.5px solid #e0eafc;
+  color: #222;
+}
+.orgprofile-input:read-only {
+  background: #f6f8fa !important;
+  color: #888;
+}
+@media (max-width: 600px) {
+  .orgprofile-modal-body {
+    padding-top: 1.1rem;
+    padding-bottom: 1.1rem;
+  }
+  .orgprofile-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 1.3rem;
+  }
+  .orgprofile-form {
+    padding: 1.1rem 0.3rem 0.7rem 0.3rem;
+  }
+}

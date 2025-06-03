@@ -14,13 +14,25 @@ interface CAModalProps {
 }
 
 export const CAModal: React.FC<CAModalProps> = ({ show, onHide, title, children, footer, centered = true, size, bodyClassName }) => (
-  <BootstrapModal show={show} onHide={onHide} centered={centered} size={size}>
+  <BootstrapModal
+    show={show}
+    onHide={onHide}
+    centered={centered}
+    size={size}
+    dialogClassName="camodal-financial-dialog"
+    contentClassName="camodal-financial-content"
+  >
     {title && (
-      <BootstrapModal.Header closeButton>
-        <BootstrapModal.Title>{title}</BootstrapModal.Title>
+      <BootstrapModal.Header closeButton className="camodal-financial-header">
+        <BootstrapModal.Title as="h5" className="fw-bold camodal-title">
+          <span className="camodal-title-icon me-2">
+            <svg width="22" height="22" fill="#3b82f6" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#e0eafc"/><path d="M7 13l3 3 7-7" stroke="#3b82f6" strokeWidth="2.5" fill="none" strokeLinecap="round"/></svg>
+          </span>
+          {title}
+        </BootstrapModal.Title>
       </BootstrapModal.Header>
     )}
-    <BootstrapModal.Body className={bodyClassName}>{children}</BootstrapModal.Body>
-    {footer && <BootstrapModal.Footer>{footer}</BootstrapModal.Footer>}
+    <BootstrapModal.Body className={bodyClassName + ' camodal-financial-body'}>{children}</BootstrapModal.Body>
+    {footer && <BootstrapModal.Footer className="camodal-financial-footer">{footer}</BootstrapModal.Footer>}
   </BootstrapModal>
 );

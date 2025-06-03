@@ -1,0 +1,53 @@
+.transactions-header {
+  gap: 1.5rem;
+}
+.transactions-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #222;
+  letter-spacing: -1px;
+}
+.transactions-subtitle {
+  font-size: 1.04rem;
+  color: #6b7280;
+  margin-top: 0.1rem;
+}
+.transactions-filter-dropdown .dropdown-toggle {
+  background: #f6f8fa !important;
+  color: #3b82f6 !important;
+  border: 1.5px solid #e0eafc !important;
+  border-radius: 999px !important;
+  font-weight: 600;
+  font-size: 1.01rem;
+  box-shadow: 0 2px 8px rgba(80,120,200,0.07);
+  padding: 0.55rem 1.5rem;
+  display: flex;
+  align-items: center;
+}
+.transactions-dropdown-menu {
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(80,120,200,0.07);
+  border: 1px solid #e0eafc;
+  min-width: 180px;
+  font-size: 1.01rem;
+}
+.transactions-dropdown-menu .dropdown-item.active,
+.transactions-dropdown-menu .dropdown-item:active {
+  background: #e0eafc;
+  color: #3b82f6;
+  font-weight: 600;
+}
+@media (max-width: 600px) {
+  .transactions-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.7rem;
+  }
+  .transactions-title {
+    font-size: 1.25rem;
+  }
+  .transactions-filter-dropdown .dropdown-toggle {
+    font-size: 0.98rem;
+    padding: 0.45rem 1.1rem;
+  }
+}

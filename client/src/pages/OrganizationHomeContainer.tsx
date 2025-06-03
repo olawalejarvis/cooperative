@@ -31,8 +31,8 @@ export function OrganizationHomeContainer() {
 
   return (
     <OrganizationHomePage
-      organization={organization}
-      organizationName={organizationName}
+      // organization={organization}
+      // organizationName={organizationName}
       user={user}
       aggregate={aggregate}
       userAggLoading={userAggLoading}

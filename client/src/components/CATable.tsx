@@ -1,5 +1,6 @@
 import { Table as BootstrapTable, Spinner, Alert } from 'react-bootstrap';
 import { useRef, useCallback } from 'react';
+import './CATable.css'; // Add a CSS file for custom styles
 
 export type TableColumn<T> = { key: keyof T & string; label: string; sortBy?: boolean; render?: (row: T) => React.ReactNode };
 
@@ -51,34 +52,50 @@ export function CATable<T extends Record<string, unknown>>({
   };
 
   const table = (
-    <BootstrapTable striped bordered hover responsive>
-      <thead>
-        <tr>
-          {columns.map(col => (
-            <th
-              key={col.key}
-              onClick={col.sortBy ? () => handleSort(col) : undefined}
-              style={col.sortBy ? { cursor: 'pointer' } : {}}
-            >
-              {col.label} {sortBy === col.key ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody
-        ref={tableBodyRef}
+    <div className="catable-financial-wrapper">
+      <BootstrapTable
+        className="catable-financial table-borderless align-middle shadow-sm"
+        striped={false}
+        bordered={false}
+        hover
+        responsive
       >
-        {data.map((item, index) => (
-          <tr key={index} onClick={onRowClick ? () => onRowClick(item) : undefined} style={onRowClick ? { cursor: 'pointer' } : {}}>
+        <thead className="catable-thead">
+          <tr>
             {columns.map(col => (
-              <td key={col.key}>
-                {col.render ? col.render(item) : String(item[col.key])}
-              </td>
+              <th
+                key={col.key}
+                onClick={col.sortBy ? () => handleSort(col) : undefined}
+                style={col.sortBy ? { cursor: 'pointer', userSelect: 'none' } : {}}
+                className={col.sortBy ? 'catable-sortable' : ''}
+              >
+                <span>{col.label}</span>
+                {sortBy === col.key && (
+                  <span className="catable-sort-indicator ms-1">
+                    {sortOrder === 'asc' ? (
+                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 4l4 6H4l4-6z" fill="#3b82f6"/></svg>
+                    ) : (
+                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 12l-4-6h8l-4 6z" fill="#3b82f6"/></svg>
+                    )}
+                  </span>
+                )}
+              </th>
             ))}
           </tr>
-        ))}
-      </tbody>
-    </BootstrapTable>
+        </thead>
+        <tbody ref={tableBodyRef}>
+          {data.map((item, index) => (
+            <tr key={index} onClick={onRowClick ? () => onRowClick(item) : undefined} style={onRowClick ? { cursor: 'pointer' } : {}} className="catable-row">
+              {columns.map(col => (
+                <td key={col.key} className="catable-cell">
+                  {col.render ? col.render(item) : String(item[col.key])}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </BootstrapTable>
+    </div>
   );
 
   if (onEndReached) {

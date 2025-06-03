@@ -4,6 +4,7 @@ import type { Transaction } from '../store/transaction';
 import type { User } from '../store/auth';
 import { UserPermission } from '../utils/UserPermission';
 import type { SortOrder } from '../types';
+import './TransactionsPage.css';
 
 interface TransactionsPageProps {
   user: User | null | undefined;
@@ -39,17 +40,25 @@ export default function TransactionsPage(props: TransactionsPageProps) {
   return (
     <>
       <Container className="mt-5">
-        <h2>Transactions</h2>
-        <div className="d-flex align-items-center mb-3">
-          <Dropdown onSelect={(val) => onFilterChange(val as 'my' | 'org')}>
-            <Dropdown.Toggle variant="secondary" id="filter-dropdown">
-              {filter === 'my' ? 'My Transactions' : 'Org Transactions'}
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              <Dropdown.Item eventKey="my">My Transactions</Dropdown.Item>
-              {canViewOrgTransactions && <Dropdown.Item eventKey="all">Org Transactions</Dropdown.Item>}
-            </Dropdown.Menu>
-          </Dropdown>
+        <div className="transactions-header d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-3">
+          <div>
+            <h2 className="transactions-title mb-1">Transactions</h2>
+            <div className="transactions-subtitle text-muted" style={{ fontSize: '1.04rem' }}>
+              View and manage your recent account transactions
+            </div>
+          </div>
+          <div className="transactions-filter-dropdown">
+            <Dropdown onSelect={(val) => onFilterChange(val as 'my' | 'org')}>
+              <Dropdown.Toggle variant="outline-primary" id="filter-dropdown" className="rounded-pill px-4 fw-semibold shadow-sm" style={{ fontSize: '1.01rem', background: '#f6f8fa', color: '#3b82f6', border: '1.5px solid #e0eafc' }}>
+                <svg width="18" height="18" fill="#3b82f6" viewBox="0 0 16 16" className="me-2"><path d="M6 10.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm3-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5z"/></svg>
+                {filter === 'my' ? 'My Transactions' : 'Org Transactions'}
+              </Dropdown.Toggle>
+              <Dropdown.Menu className="transactions-dropdown-menu">
+                <Dropdown.Item eventKey="my" className={filter === 'my' ? 'active' : ''}>My Transactions</Dropdown.Item>
+                {canViewOrgTransactions && <Dropdown.Item eventKey="all" className={filter === 'org' ? 'active' : ''}>Org Transactions</Dropdown.Item>}
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
         </div>
         {loading ? (
           <Spinner animation="border" />
