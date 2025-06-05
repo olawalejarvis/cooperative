@@ -26,6 +26,8 @@ export enum TransactionMethod {
 export enum TransactionType {
   SAVING_DEPOSIT = 'savings_deposit',
   DIVIDEND_PAYMENT = 'dividend_payment',
+  WITHDRAWAL = 'withdrawal',
+  SHARE_PURCHASE = 'share_purchase',
 }
 
 export enum CurrencyType {

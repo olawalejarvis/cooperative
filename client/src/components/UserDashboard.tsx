@@ -1,10 +1,13 @@
 import { Button } from 'react-bootstrap';
 import TransactionTable from '../components/TransactionTable';
 import DashboardSummary from '../components/DashboardSummary';
+import TransactionModal from '../components/TransactionModal';
 import type { Transaction } from '../store/transaction';
 import type { UserAggregate } from '../store/user';
 import type { SortOrder } from '../types';
 import { useNavigate, useParams } from 'react-router-dom';
+import React from 'react';
+import { useTransactionStore } from '../store/transaction';
 
 function UserDashboard({ userAggLoading, userAggError, aggregate, transactions, txLoading, txError, sortBy, sortOrder, handleSortChange }: {
   userAggLoading: boolean,
@@ -18,9 +21,22 @@ function UserDashboard({ userAggLoading, userAggError, aggregate, transactions, 
   handleSortChange: (field: string, order: SortOrder) => void
 }) {
   const MAX_HOME_TRANSACTIONS = 7;
+  const [selectedTx, setSelectedTx] = React.useState<Transaction | null>(null);
+  const [showModal, setShowModal] = React.useState(false);
+  const { organizationName } = useParams();
   const navigate = useNavigate();
-  const { orgName } = useParams();
+  const transactionStore = useTransactionStore();
   const showTransactions = transactions.slice(0, MAX_HOME_TRANSACTIONS);
+
+  const handleViewTransaction = (tx: Transaction) => {
+    setSelectedTx(tx);
+    setShowModal(true);
+  };
+
+  const handleUpdateStatus = async (id: string, status: string) => {
+    await transactionStore.updateTransactionStatus(id, status);
+    setShowModal(false);
+  };
 
   // --- Dashboard Calculations ---
   // Filter transactions for year-to-date
@@ -66,7 +82,7 @@ function UserDashboard({ userAggLoading, userAggError, aggregate, transactions, 
         isYearToDate={true}
       />
       <div className="text-muted mb-2" style={{ fontSize: '0.98rem' }}>
-        Your last {MAX_HOME_TRANSACTIONS} transactions
+        Last {MAX_HOME_TRANSACTIONS} transactions history
       </div>
       <div className="w-100 overflow-auto" style={{ minWidth: 0 }}>
         <TransactionTable
@@ -76,6 +92,7 @@ function UserDashboard({ userAggLoading, userAggError, aggregate, transactions, 
           sortBy={sortBy}
           sortOrder={sortOrder}
           onSortChange={handleSortChange}
+          onRowClick={handleViewTransaction}
         />
       </div>
       {transactions.length > MAX_HOME_TRANSACTIONS && (
@@ -84,15 +101,22 @@ function UserDashboard({ userAggLoading, userAggError, aggregate, transactions, 
             variant="outline-primary"
             className="view-all-link px-3 py-1 d-flex align-items-center"
             style={{ fontWeight: 500, fontSize: '1rem', borderRadius: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
-            onClick={() => navigate(`/${orgName}/transactions`)}
+            onClick={() => navigate(`/${organizationName}/transactions`)}
           >
-            <span className="me-2">View All Transactions</span>
+            <span className="me-2">View Transactions History</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
               <path fillRule="evenodd" d="M1 8a.75.75 0 0 1 .75-.75h10.19l-3.22-3.22a.75.75 0 1 1 1.06-1.06l4.5 4.5a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 0 1-1.06-1.06l3.22-3.22H1.75A.75.75 0 0 1 1 8Z"/>
             </svg>
           </Button>
         </div>
       )}
+      <TransactionModal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        transaction={selectedTx}
+        userRole={"admin"}
+        onUpdateStatus={handleUpdateStatus}
+      />
     </div>
   );
 }

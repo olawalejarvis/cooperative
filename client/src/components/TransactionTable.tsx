@@ -62,7 +62,29 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, loadi
       key: 'type',
       label: 'Type',
       sortBy: true,
-      render: (row: Transaction) => String(row.type),
+      render: (row: Transaction) => {
+        // Map transaction type to icon and tooltip
+        switch (row.type) {
+          case 'savings_deposit':
+            return (
+              <span title="Savings Deposit" style={{ color: '#22c55e', fontSize: 18, display: 'inline-flex', alignItems: 'center' }}>
+                <i className="bi bi-piggy-bank-fill" style={{ fontSize: 18, verticalAlign: 'middle' }} />
+              </span>
+            );
+          case 'dividend_payment':
+            return (
+              <span title="Dividend Payment" style={{ color: '#f59e42', fontSize: 18, display: 'inline-flex', alignItems: 'center' }}>
+                <i className="bi bi-cash-coin" style={{ fontSize: 18, verticalAlign: 'middle' }} />
+              </span>
+            );
+          default:
+            return (
+              <span title={String(row.type)} style={{ color: '#64748b', fontSize: 18, display: 'inline-flex', alignItems: 'center' }}>
+                <i className="bi bi-question-circle" style={{ fontSize: 18, verticalAlign: 'middle' }} />
+              </span>
+            );
+        }
+      },
     },
     {
       key: 'amount',
