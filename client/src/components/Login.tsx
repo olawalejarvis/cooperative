@@ -8,7 +8,7 @@ interface LoginProps {
   onLogin: (userName: string, password: string) => Promise<void>;
 }
 
-const Login: React.FC<LoginProps> = ({ onLogin, error }) => {
+const Login: React.FC<LoginProps> = ({ onLogin, error, orgName }) => {
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
 
@@ -22,7 +22,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, error }) => {
   return (
     <Container className="mt-5">
       <Row className="justify-content-center">
-        <Col md={6} lg={4}>
+        <Col lg={10} md={8} sm={6} xs={12}>
           <Form onSubmit={handleSubmit} autoComplete="off">
             <Form.Group className="mb-3" controlId="userName">
               <Form.Label>Username</Form.Label>

@@ -54,15 +54,41 @@ export default function OrganizationLoginPage() {
   };
 
   return (
-    <>
-      <div className="d-flex flex-column align-items-center mt-5">
-        <h2>Login to {organizationName}</h2>
-        <Login orgName={organizationName} onLogin={handleLogin} error={loginError} loading={loading} />
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <div style={{
+        maxWidth: 420,
+        width: '100%',
+        padding: '2.5rem 1.5rem',
+        borderRadius: 18,
+        boxShadow: '0 4px 24px rgba(80,120,200,0.10)',
+        background: '#fff',
+        border: '1.5px solid #e0eafc',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+      }}>
+        <div className="text-center mb-4">
+          <h4 style={{ fontWeight: 700, color: '#6366f1', letterSpacing: 1 }}>
+            Welcome to {organizationName} Cooperative Society
+          </h4>
+        </div>
+        <p className="text-center text-muted mb-4">
+          Please enter your username and password to access your account.
+        </p>
+        <div className="w-100">
+          <Login orgName={organizationName} onLogin={handleLogin} error={loginError} loading={loading} />
+        </div>
         <div className="mt-3 text-center">
           <button
-            className="btn btn-link"
+            className="btn btn-outline-primary rounded-pill px-4 fw-semibold"
+            style={{ fontWeight: 500 }}
             onClick={() => {
-              // Redirect to org register page for new user
               navigate(`/${organizationName}/register${searchParams.toString() ? `?${searchParams.toString()}` : ''}`);
             }}
           >
@@ -76,6 +102,6 @@ export default function OrganizationLoginPage() {
         onSubmit={handleVerify2FA}
         error={loginError}
       />
-    </>
+    </div>
   );
 }

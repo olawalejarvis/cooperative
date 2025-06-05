@@ -1,78 +1,174 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import Register from '../components/Register';
-import { useOrganizationStore } from '../store/organization';
+import { useState } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { Form, Button, Card, Alert, Spinner } from 'react-bootstrap';
 
 export default function OrganizationRegisterPage() {
   const { organizationName } = useParams<{ organizationName: string }>();
-  const [showLogin, setShowLogin] = useState(false);
   const navigate = useNavigate();
-  const registerUser = useOrganizationStore((state) => state.registerUser);
-  const [registerError, setRegisterError] = useState<string | null>(null);
-  const [registerSuccess, setRegisterSuccess] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
+    userName: '',
+    email: '',
+    phoneNumber: '',
+    password: '',
+    confirmPassword: '',
+  });
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Handle registration form submit
-  const handleRegister = async (formData: {
-    firstName: string;
-    lastName: string;
-    userName: string;
-    email: string;
-    password: string;
-    phoneNumber: string;
-  }) => {
-    setRegisterError(null);
-    setRegisterSuccess(false);
-    setLoading(true);
-    try {
-      await registerUser({ ...formData, orgName: organizationName });
-      setRegisterSuccess(true);
-      // Optionally redirect to login after a short delay
-      setTimeout(() => {
-        navigate(`/${organizationName}/login`);
-      }, 1500);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setRegisterError(err.message || 'Registration failed');
-      } else if (typeof err === 'object' && err && 'response' in err) {
-        // Type assertion to access err.response
-        setRegisterError((err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Registration failed');
-      } else {
-        setRegisterError('Registration failed');
-      }
-    } finally {
-      setLoading(false);
-    }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  useEffect(() => {
-    if (showLogin && organizationName) {
-      navigate(`/${organizationName}/login`);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    if (form.password !== form.confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
     }
-  }, [showLogin, organizationName, navigate]);
+    // TODO: Replace with actual registration logic
+    setTimeout(() => {
+      setLoading(false);
+      navigate(`/${organizationName}/login${searchParams.toString() ? `?${searchParams.toString()}` : ''}`);
+    }, 1200);
+  };
 
   return (
-    <>
-      <div className="d-flex flex-column align-items-center mt-5">
-        <h2>Register for {organizationName}</h2>
-        <Register
-          orgName={organizationName}
-          onSubmit={handleRegister}
-          error={registerError}
-          success={registerSuccess}
-          loading={loading}
-        />
-        {registerSuccess && (
-          <div className="alert alert-success mt-3" role="alert">
-            User account creation request has been sent. Please wait for an approval email from your organization admin before logging in.
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <Card style={{ maxWidth: 420, width: '100%', padding: '2rem 1.5rem', borderRadius: 16, boxShadow: '0 4px 24px rgba(80,120,200,0.08)' }}>
+        <Card.Body>
+          <div className="text-center mb-4">
+            <h4 style={{ fontWeight: 700, color: '#6366f1', letterSpacing: 1 }}>
+              Welcome to {organizationName} Cooperative Society
+            </h4>
           </div>
-        )}
-        <div className="mt-3 text-center">
-          <button className="btn btn-link" onClick={() => setShowLogin(true)}>
-            Already have an account? Login
-          </button>
-        </div>
-      </div>
-    </>
+          <h4 className="text-center mb-3" style={{ fontWeight: 700, color: '#3b82f6' }}>
+            Registration Request
+          </h4>
+          <div className="text-muted text-center mb-3" style={{ fontSize: '1.01rem' }}>
+            Your registration will be reviewed by an admin before your account is created.
+          </div>
+          <Form onSubmit={handleSubmit} autoComplete="off">
+            <Form.Group className="mb-3" controlId="firstName">
+              <Form.Label>First Name</Form.Label>
+              <Form.Control
+                type="text"
+                name="firstName"
+                value={form.firstName}
+                onChange={handleChange}
+                required
+                autoComplete="given-name"
+                style={{ minWidth: 0 }}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="lastName">
+              <Form.Label>Last Name</Form.Label>
+              <Form.Control
+                type="text"
+                name="lastName"
+                value={form.lastName}
+                onChange={handleChange}
+                required
+                autoComplete="family-name"
+                style={{ minWidth: 0 }}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="userName">
+              <Form.Label>Username</Form.Label>
+              <Form.Control
+                type="text"
+                name="userName"
+                value={form.userName}
+                onChange={handleChange}
+                required
+                autoFocus
+                autoComplete="username"
+                style={{ minWidth: 0 }}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="email">
+              <Form.Label>Email</Form.Label>
+              <Form.Control
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                required
+                autoComplete="email"
+                style={{ minWidth: 0 }}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="phoneNumber">
+              <Form.Label>Phone Number</Form.Label>
+              <Form.Control
+                type="tel"
+                name="phoneNumber"
+                value={form.phoneNumber}
+                onChange={handleChange}
+                required
+                autoComplete="tel"
+                style={{ minWidth: 0 }}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="password">
+              <Form.Label>Password</Form.Label>
+              <Form.Control
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                required
+                autoComplete="new-password"
+                style={{ minWidth: 0 }}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="confirmPassword">
+              <Form.Label>Confirm Password</Form.Label>
+              <Form.Control
+                type="password"
+                name="confirmPassword"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                required
+                autoComplete="new-password"
+                style={{ minWidth: 0 }}
+              />
+            </Form.Group>
+            {error && <Alert variant="danger">{error}</Alert>}
+            <Button
+              variant="primary"
+              type="submit"
+              className="w-100 rounded-pill fw-semibold"
+              style={{ background: '#3b82f6', border: 'none', fontSize: '1.1rem', padding: '0.6rem 0' }}
+              disabled={loading}
+            >
+              {loading ? <Spinner animation="border" size="sm" /> : 'Register'}
+            </Button>
+          </Form>
+          <div className="text-center mt-3">
+            <Button
+              variant="outline-primary"
+              className="rounded-pill"
+              onClick={() => navigate(`/${organizationName}/login${searchParams.toString() ? `?${searchParams.toString()}` : ''}`)}
+              style={{ fontWeight: 500 }}
+            >
+              Already have an account? Login
+            </Button>
+          </div>
+        </Card.Body>
+      </Card>
+    </div>
   );
 }
