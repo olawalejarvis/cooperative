@@ -22,9 +22,9 @@ export const OrgUsersContainer: React.FC = () => {
 
   useEffect(() => {
     if (filter === 'org') {
-      fetchOrgUsers(orgName, sortBy, sortOrder);
+      fetchOrgUsers(orgName, { sortBy, sortOrder });
     } else if (filter === 'all' && UserPermission.isRootUser(user?.role)) {
-      fetchAllUsers(sortBy, sortOrder);
+      fetchAllUsers({ sortBy, sortOrder });
     }
   }, [filter, orgName, sortBy, sortOrder, fetchOrgUsers, fetchAllUsers, user]);
 

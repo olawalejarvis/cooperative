@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { Container, Spinner, Alert } from 'react-bootstrap';
 import TransactionTable from '../components/TransactionTable';
-import type { Transaction } from '../store/transaction';
-import type { User } from '../store/auth';
+import type { Transaction, TransactionSearchParams } from '../store/transaction';
 import { UserPermission } from '../utils/UserPermission';
 import type { SortOrder } from '../types';
 import './TransactionsPage.css';
 import { TRANSACTION_METHODS, TRANSACTION_STATUSES, TRANSACTION_TYPES } from '../types/transactionFilters';
 import { useTransactionStore } from '../store/transaction';
 import { CAModal } from '../components/CAModal';
+import type { User } from '../store/user';
 
-interface TransactionsPageProps {
+export interface TransactionsPageProps {
   user: User | null | undefined;
   transactions: Transaction[];
   loading: boolean;
@@ -43,25 +43,32 @@ export default function TransactionsPage(props: TransactionsPageProps) {
   const transactionStore = useTransactionStore();
 
   // Add local filter state for method, status, type, and date range
-  const [method, setMethod] = useState('');
-  const [status, setStatus] = useState('');
-  const [type, setType] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [method, setMethod] = useState();
+  const [status, setStatus] = useState();
+  const [type, setType] = useState();
+  const [dateFrom, setDateFrom] = useState();
+  const [dateTo, setDateTo] = useState();
 
   // Handler to trigger parent filter (if needed)
   const handleAdvancedFilter = async () => {
-    const filterOptions: Record<string, string | number | undefined> = {
+    const filterOptions: TransactionSearchParams = {
       sortBy,
       sortOrder,
-      method: method || undefined,
-      status: status || undefined,
-      type: type || undefined,
+      method,
+      status,
+      type,
       page: 1,
       limit: 20,
     };
-    if (dateFrom) filterOptions.dateFrom = dateFrom;
-    if (dateTo) filterOptions.dateTo = dateTo;
+    if (dateFrom || dateTo) filterOptions.dateRange = {
+      from: dateFrom || undefined,
+      to: dateTo || undefined,
+    };
+    if (filter === 'my') {
+      filterOptions.userId = user?.id;
+    } else if (canViewOrgTransactions) {
+      filterOptions.organizationId = user?.organization?.id;
+    }
 
     if (filter === 'my') {
       await transactionStore.fetchMyTransactions(filterOptions);
@@ -70,55 +77,55 @@ export default function TransactionsPage(props: TransactionsPageProps) {
     }
   };
 
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState({
+  const [showCreateTransactionModal, setShowCreateTransactionModal] = useState(false);
+  const [createTransactionForm, setCreateTransactionForm] = useState({
     amount: '',
     type: '',
     method: '',
     status: 'pending',
     createdAt: '',
   });
-  const [createLoading, setCreateLoading] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
+  const [createTransactionLoading, setCreateTransactionLoading] = useState(false);
+  const [createTransactionError, setCreateTransactionError] = useState<string | null>(null);
   const isAdmin = UserPermission.isAdmin(user?.role);
 
-  const handleCreateChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setCreateForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  const handleCreateTransactionChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setCreateTransactionForm(f => ({ ...f, [e.target.name]: e.target.value }));
   };
 
-  const handleOpenCreate = () => {
-    setCreateForm({ amount: '', type: '', method: '', status: 'pending', createdAt: '' });
-    setCreateError(null);
-    setShowCreateModal(true);
+  const handleOpenCreateTransaction = () => {
+    setCreateTransactionForm({ amount: '', type: '', method: '', status: 'pending', createdAt: '' });
+    setCreateTransactionError(null);
+    setShowCreateTransactionModal(true);
   };
-  const handleCloseCreate = () => setShowCreateModal(false);
+  const handleCloseCreateTransaction = () => setShowCreateTransactionModal(false);
 
-  const handleCreateSubmit = async (e: React.FormEvent) => {
+  const handleCreateTransactionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCreateLoading(true);
-    setCreateError(null);
+    setCreateTransactionLoading(true);
+    setCreateTransactionError(null);
     try {
-      if (!createForm.amount || !createForm.type || !createForm.method || !createForm.createdAt) {
-        setCreateError('All fields except status are required.');
-        setCreateLoading(false);
+      if (!createTransactionForm.amount || !createTransactionForm.type || !createTransactionForm.method || !createTransactionForm.createdAt) {
+        setCreateTransactionError('All fields except status are required.');
+        setCreateTransactionLoading(false);
         return;
       }
       await transactionStore.createTransaction({
-        amount: Number(createForm.amount),
-        type: createForm.type,
-        method: createForm.method,
-        status: isAdmin ? createForm.status : 'pending',
-        createdAt: createForm.createdAt,
+        amount: Number(createTransactionForm.amount),
+        type: createTransactionForm.type,
+        method: createTransactionForm.method,
+        status: isAdmin ? createTransactionForm.status : 'pending',
+        createdAt: createTransactionForm.createdAt,
       });
-      setShowCreateModal(false);
-      setCreateForm({ amount: '', type: '', method: '', status: 'pending', createdAt: '' });
+      setShowCreateTransactionModal(false);
+      setCreateTransactionForm({ amount: '', type: '', method: '', status: 'pending', createdAt: '' });
       // Optionally, refresh the list
       handleAdvancedFilter();
     } catch (err: unknown) {
-      if (err instanceof Error) setCreateError(err.message);
-      else setCreateError('Failed to create transaction');
+      if (err instanceof Error) setCreateTransactionError(err.message);
+      else setCreateTransactionError('Failed to create transaction');
     } finally {
-      setCreateLoading(false);
+      setCreateTransactionLoading(false);
     }
   };
 
@@ -138,7 +145,7 @@ export default function TransactionsPage(props: TransactionsPageProps) {
                 className="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm flex-shrink-0"
                 type="button"
                 style={{ fontSize: '1.05rem', background: '#3b82f6', border: 'none', minWidth: 180 }}
-                onClick={handleOpenCreate}
+                onClick={handleOpenCreateTransaction}
               >
                 + Create New Transaction
               </button>
@@ -200,16 +207,16 @@ export default function TransactionsPage(props: TransactionsPageProps) {
         )}
       </Container>
       {/* Create Transaction Modal */}
-      <CAModal show={showCreateModal} onHide={handleCloseCreate} title="Create New Transaction" size="lg">
-        <form onSubmit={handleCreateSubmit} className="d-flex flex-column gap-3 p-2">
+      <CAModal show={showCreateTransactionModal} onHide={handleCloseCreateTransaction} title="Create New Transaction" size="lg">
+        <form onSubmit={handleCreateTransactionSubmit} className="d-flex flex-column gap-3 p-2">
           <div className="row">
             <div className="col-md-6 mb-2">
               <label className="form-label fw-semibold">Amount</label>
-              <input type="number" name="amount" className="form-control rounded-pill px-3" min="0" step="0.01" value={createForm.amount} onChange={handleCreateChange} required />
+              <input type="number" name="amount" className="form-control rounded-pill px-3" min="0" step="0.01" value={createTransactionForm.amount} onChange={handleCreateTransactionChange} required />
             </div>
             <div className="col-md-6 mb-2">
               <label className="form-label fw-semibold">Type</label>
-              <select name="type" className="form-select rounded-pill px-3" value={createForm.type} onChange={handleCreateChange} required>
+              <select name="type" className="form-select rounded-pill px-3" value={createTransactionForm.type} onChange={handleCreateTransactionChange} required>
                 <option value="" disabled>Select type</option>
                 {TRANSACTION_TYPES.filter(opt => opt.value).map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
               </select>
@@ -218,31 +225,31 @@ export default function TransactionsPage(props: TransactionsPageProps) {
           <div className="row">
             <div className="col-md-6 mb-2">
               <label className="form-label fw-semibold">Method</label>
-              <select name="method" className="form-select rounded-pill px-3" value={createForm.method} onChange={handleCreateChange} required>
+              <select name="method" className="form-select rounded-pill px-3" value={createTransactionForm.method} onChange={handleCreateTransactionChange} required>
                 <option value="" disabled>Select method</option>
                 {TRANSACTION_METHODS.filter(opt => opt.value).map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
               </select>
             </div>
             <div className="col-md-6 mb-2">
               <label className="form-label fw-semibold">Date</label>
-              <input type="date" name="createdAt" className="form-control rounded-pill px-3" value={createForm.createdAt} onChange={handleCreateChange} required />
+              <input type="date" name="createdAt" className="form-control rounded-pill px-3" value={createTransactionForm.createdAt} onChange={handleCreateTransactionChange} required />
             </div>
           </div>
           {isAdmin && (
             <div className="row">
               <div className="col-md-6 mb-2">
                 <label className="form-label fw-semibold">Status</label>
-                <select name="status" className="form-select rounded-pill px-3" value={createForm.status} onChange={handleCreateChange} required>
+                <select name="status" className="form-select rounded-pill px-3" value={createTransactionForm.status} onChange={handleCreateTransactionChange} required>
                   {TRANSACTION_STATUSES.filter(opt => opt.value).map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                 </select>
               </div>
             </div>
           )}
-          {createError && <div className="text-danger fw-semibold">{createError}</div>}
+          {createTransactionError && <div className="text-danger fw-semibold">{createTransactionError}</div>}
           <div className="d-flex justify-content-end gap-2 mt-2">
-            <button type="button" className="btn btn-outline-secondary rounded-pill px-4" onClick={handleCloseCreate} disabled={createLoading}>Cancel</button>
-            <button type="submit" className="btn btn-primary rounded-pill px-4" style={{ background: '#3b82f6', border: 'none' }} disabled={createLoading}>
-              {createLoading ? 'Creating...' : 'Create'}
+            <button type="button" className="btn btn-outline-secondary rounded-pill px-4" onClick={handleCloseCreateTransaction} disabled={createTransactionLoading}>Cancel</button>
+            <button type="submit" className="btn btn-primary rounded-pill px-4" style={{ background: '#3b82f6', border: 'none' }} disabled={createTransactionLoading}>
+              {createTransactionLoading ? 'Creating...' : 'Create'}
             </button>
           </div>
         </form>

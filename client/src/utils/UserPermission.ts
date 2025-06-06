@@ -1,14 +1,4 @@
-// src/utils/UserRole.ts
-
-export const UserRole = {
-  ROOT_USER: 'root_user',
-  ADMIN: 'admin',
-  USER: 'user',
-  SUPER_ADMIN: 'superadmin'
-  // Add other roles as needed
-} as const;
-
-export type UserRole = typeof UserRole[keyof typeof UserRole];
+import { UserRole } from "../store/user";
 
 export class UserPermission {
   static isRootUser(role?: string | null): boolean {

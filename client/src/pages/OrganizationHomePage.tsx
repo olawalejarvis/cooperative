@@ -1,15 +1,12 @@
 import { Container } from 'react-bootstrap';
-import type { Transaction } from '../store/transaction';
-import type { UserAggregate } from '../store/user';
+import type { Transaction, TransactionAggregate } from '../store/transaction';
 import type { SortOrder } from '../types';
-import type { User } from '../store/auth';
 import UserDashboard from '../components/UserDashboard';
+import type { User } from '../store/user';
 
 interface OrganizationHomePageProps {
   user?: User | null;
-  aggregate: UserAggregate | null;
-  userAggLoading: boolean;
-  userAggError: string | null | undefined;
+  aggregate: TransactionAggregate | null;
   transactions: Transaction[];
   txLoading: boolean;
   txError: string | null | undefined;
@@ -22,8 +19,6 @@ export default function OrganizationHomePage(props: OrganizationHomePageProps) {
   const {
     user,
     aggregate,
-    userAggLoading,
-    userAggError,
     transactions,
     txLoading,
     txError,
@@ -38,8 +33,6 @@ export default function OrganizationHomePage(props: OrganizationHomePageProps) {
         {/* User dashboard for logged-in users */}
         {user && (
           <UserDashboard
-            userAggLoading={userAggLoading}
-            userAggError={userAggError}
             aggregate={aggregate}
             transactions={transactions}
             txLoading={txLoading}

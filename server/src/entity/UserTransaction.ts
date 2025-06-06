@@ -96,6 +96,9 @@ export class UserTransaction {
 
   @Column({ name: 'reference_id', default: '' })
   referenceId!: string;
+  
+  @Column({ name: 'external_transaction_id', default: '', nullable: true })
+  externalTransactionId?: string;
 
   @Column({ name: 'description', type: 'text', nullable: true })
   description?: string;

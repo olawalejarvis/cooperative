@@ -1,6 +1,15 @@
 import axios from 'axios';
 
-axios.defaults.baseURL = 'http://localhost:3000';
-axios.defaults.withCredentials = true;
+export const axiosInstance = axios.create({
+  baseURL: 'http://localhost:3000',
+  withCredentials: true,
+});
 
-export default axios;
+export function isAxiosError(err: unknown): err is { response: { data?: { error?: string } } } {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    'response' in err &&
+    typeof (err as Record<string, unknown>).response === 'object'
+  );
+}

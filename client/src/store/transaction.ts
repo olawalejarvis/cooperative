@@ -1,5 +1,9 @@
 import { create } from 'zustand';
-import axios from '../api/axios';
+import { axiosInstance as axios } from '../api/axios';
+import type { Organization } from './organization';
+import { isAxiosError } from 'axios';
+import type { User } from './user';
+import type { TransactionMethods, TransactionStatuses, TransactionTypes } from '../types/transactionFilters';
 
 export interface Transaction extends Record<string, unknown> {
   id: string;
@@ -10,46 +14,104 @@ export interface Transaction extends Record<string, unknown> {
   method: string;
   createdAt: string;
   updatedAt: string;
-  // Add more fields as needed
+  user?: User;
+  createdBy?: User;
+  updatedBy?: User;
+  organization?: Organization;
+  statusUpdatedBy?: User;
+  referenceId?: string;
+  externalTransactionId?: string;
+  description?: string;
+  receiptUrl?: string;
+  deleted?: boolean;
 }
 
 export interface TransactionPage {
-  data: Transaction[];
+  transactions: Transaction[];
   total: number;
   page: number;
   limit: number;
   totalPages: number;
 }
 
+export type TransactionPageResult = {
+  data?: TransactionPage;
+  error?: string | null;
+};
+
+
+export interface TransactionSearchParams {
+  q?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+  method?: TransactionMethods;
+  status?: TransactionStatuses;
+  type?: TransactionTypes;
+  dateRange?: {
+    from?: string;
+    to?: string;
+  };
+  createdBeforeDate?: string;
+  createdAfterDate?: string;
+  userId?: string;
+  organizationId?: string;
+}
+
+export interface TransactionAggregate {
+  amount: number;
+  count: number;
+  formattedAggregate: string;
+  aggregationType: string;
+  transactionStatus?: string;
+  transactionType?: string;
+  transactionMethod?: string;
+  deleted: boolean;
+  dateRange?: {
+    from?: string;
+    to?: string;
+  };
+  createdBeforeDate?: string;
+  createdAfterDate?: string;
+}
+
 interface TransactionState {
   transactions: Transaction[];
+  aggregate: TransactionAggregate | null;
   loading: boolean;
   error: string | null;
-  fetchMyTransactions: (options?: { sortBy?: string; sortOrder?: 'asc' | 'desc'; limit?: number; page?: number }) => Promise<TransactionPage | undefined>;
-  fetchAllTransactions: (options?: { sortBy?: string; sortOrder?: 'asc' | 'desc'; limit?: number; page?: number }) => Promise<TransactionPage | undefined>;
-  updateTransactionStatus: (id: string, status: string) => Promise<void>;
-  deleteTransaction: (id: string) => Promise<void>;
-  createTransaction: (data: Partial<Transaction>) => Promise<void>;
+  fetchMyTransactionAggregate: (userId: string) => Promise<void>;
+  fetchMyTransactions: (options?: TransactionSearchParams) => Promise<TransactionPageResult>;
+  fetchAllTransactions: (options?: TransactionSearchParams) => Promise<TransactionPageResult>;
+  updateTransactionStatus: (id: string, status: string) => Promise<{ error: string | null }>;
+  deleteTransaction: (id: string) => Promise<{ error: string | null }>;
+  createTransaction: (data: Partial<Transaction>) => Promise<{ error: string | null }>;
 }
 
 export const useTransactionStore = create<TransactionState>((set) => ({
   transactions: [],
+  aggregate: null,
   loading: false,
   error: null,
-  fetchMyTransactions: async (options): Promise<TransactionPage | undefined> => {
+  fetchMyTransactions: async (options): Promise<TransactionPageResult> => {
     set({ loading: true, error: null });
     try {
+      const urlSearchParams = getTransactionUrlSearchParams(options);
       let url = '/v1/transactions/me';
-      const params = new URLSearchParams();
-      if (options?.sortBy) params.append('sortBy', options.sortBy);
-      if (options?.sortOrder) params.append('sortOrder', options.sortOrder);
-      if (options?.limit) params.append('limit', String(options.limit));
-      if (options?.page) params.append('page', String(options.page));
-      if (Array.from(params).length) url += `?${params.toString()}`;
+      
+      if (Array.from(urlSearchParams).length) {
+        url += `?${urlSearchParams.toString()}`;
+      }
+      
       const res = await axios.get(url);
       set({ transactions: res.data.data, loading: false });
-      return res.data; // Return full response for pagination
+      return {
+        data: { ...res.data, transactions: res.data.data },
+        error: null
+      }
     } catch (err) {
+      set({ loading: false });
       if (typeof err === 'object' && err !== null && 'response' in err) {
         const errorObj = err as { response?: { data?: { error?: string } }, message?: string };
         set({ error: errorObj.response?.data?.error || errorObj.message || 'Unknown error', loading: false });
@@ -58,22 +120,41 @@ export const useTransactionStore = create<TransactionState>((set) => ({
       } else {
         set({ error: 'Unknown error', loading: false });
       }
-      return undefined;
+      return { error: 'Failed to fetch transactions' }; // Return empty page on error
     }
   },
-  fetchAllTransactions: async (options): Promise<TransactionPage | undefined> => {
+  fetchMyTransactionAggregate: async (userId: string) => {
+    set({ loading: true, error: null });
+    try {
+      const res = await axios.get(`/v1/transactions/users/${userId}/aggregate`);
+      set({ aggregate: res.data, loading: false });
+    } catch (err: unknown) {
+      if (typeof err === 'object' && err !== null && 'response' in err) {
+        const errorObj = err as { response?: { data?: { error?: string } }, message?: string };
+        set({ error: errorObj.response?.data?.error || errorObj.message || 'Unknown error', loading: false });
+      } else if (err instanceof Error) {
+        set({ error: err.message, loading: false });
+      } else {
+        set({ error: 'Unknown error', loading: false });
+      }
+    }
+  },
+  fetchAllTransactions: async (options): Promise<TransactionPageResult> => {
     set({ loading: true, error: null });
     try {
       let url = '/v1/transactions';
-      const params = new URLSearchParams();
-      if (options?.sortBy) params.append('sortBy', options.sortBy);
-      if (options?.sortOrder) params.append('sortOrder', options.sortOrder);
-      if (options?.limit) params.append('limit', String(options.limit));
-      if (options?.page) params.append('page', String(options.page));
-      if (Array.from(params).length) url += `?${params.toString()}`;
+      const params = getTransactionUrlSearchParams(options);
+
+      if (Array.from(params).length) {
+        url += `?${params.toString()}`;
+      }
+      
       const res = await axios.get(url);
       set({ transactions: res.data.data, loading: false });
-      return res.data; // Return full response for pagination
+      return {
+        data: { ...res.data, transactions: res.data.data },
+        error: null
+      }
     } catch (err) {
       if (typeof err === 'object' && err !== null && 'response' in err) {
         const errorObj = err as { response?: { data?: { error?: string } }, message?: string };
@@ -83,19 +164,60 @@ export const useTransactionStore = create<TransactionState>((set) => ({
       } else {
         set({ error: 'Unknown error', loading: false });
       }
-      return undefined;
+      return { error: 'Failed to fetch transactions' };
     }
   },
   updateTransactionStatus: async (id: string, status: string) => {
-    await axios.put(`/v1/transactions/${id}`, { status });
-    // Optionally, refetch or update the transaction in state
+    try {
+      await axios.put(`/v1/transactions/${id}`, { status });
+      return { error: null };
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.error) {
+        return { error: err.response.data.error };
+      } else if (err instanceof Error) {
+        return { error: err.message || 'Failed to update transaction status' };
+      } else {
+        return { error: 'Failed to update transaction status' };
+      }
+    }
   },
   deleteTransaction: async (id: string) => {
-    await axios.delete(`/v1/transactions/${id}`);
-    // Optionally, refetch or update the transactions in state
+    try {
+      await axios.delete(`/v1/transactions/${id}`);
+      return { error: null };
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.error) {
+        return { error: err.response.data.error };
+      }
+      else if (err instanceof Error) {
+        return { error: err.message || 'Failed to delete transaction' };
+      }
+      return { error: 'Failed to delete transaction' };
+    }
   },
   createTransaction: async (data: Partial<Transaction>) => {
-    await axios.post('/v1/transactions', data);
-    // Optionally, refetch or update the transactions in state
+    try {
+      await axios.post('/v1/transactions', data);
+      return { error: null };
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.error) {
+        return { error: err.response.data.error };
+      } else if (err instanceof Error) {
+        return { error: err.message || 'Failed to create transaction' };
+      }
+      return { error: 'Failed to create transaction' };
+    }
   },
 }));
+
+export function getTransactionUrlSearchParams(options: TransactionSearchParams | undefined): URLSearchParams {
+  const params = new URLSearchParams();
+  if (!options) return params;
+  if (options.q) params.append('q', options.q);
+  if (options.sortBy) params.append('sortBy', options.sortBy);
+  if (options.sortOrder) params.append('sortOrder', options.sortOrder);
+  if (options.page !== undefined) params.append('page', String(options.page));
+  if (options.limit !== undefined) params.append('limit', String(options.limit));
+  return params;
+}
+

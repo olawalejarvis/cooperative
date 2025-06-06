@@ -1,23 +1,6 @@
 import { create } from 'zustand';
-import axios from '../api/axios';
-import type { Organization } from './organization';
-
-// Define the User type to match the structure expected from the API
-export type User = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email?: string;
-  userName?: string;
-  phoneNumber?: string;
-  isActive: boolean;
-  deleted: boolean;
-  role: string; // e.g., 'ROOT_USER', 'ADMIN', etc.'
-  organization?: Organization; // Organization ID or name
-  createdAt?: string;
-  updatedAt?: string;
-  token?: string;
-};
+import { axiosInstance as axios, isAxiosError } from '../api/axios';
+import type { User } from './user';
 
 interface AuthState {
   user: User | null;
@@ -27,8 +10,8 @@ interface AuthState {
   logout: (organizationName?: string) => void;
   login: (userName: string, password: string, organizationName?: string) => Promise<void>;
   getMe: (organizationName?: string) => Promise<void>;
-  request2FACode: (username: string, password: string, organizationName: string) => Promise<string | null>;
-  verify2FACode: (username: string, code: string, organizationName: string) => Promise<string | null>;
+  request2FACode: (username: string, password: string, organizationName: string) => Promise<{ error: string | null } | null>;
+  verify2FACode: (username: string, code: string, organizationName: string) => Promise<{ error: string | null } | null>;
   updateProfile: (
     organizationName: string | undefined,
     userId: string | undefined,
@@ -36,15 +19,6 @@ interface AuthState {
     lastName: string,
     setUser: (user: User) => void
   ) => Promise<void>;
-}
-
-function isAxiosError(err: unknown): err is { response: { data?: { error?: string } } } {
-  return (
-    typeof err === 'object' &&
-    err !== null &&
-    'response' in err &&
-    typeof (err as Record<string, unknown>).response === 'object'
-  );
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -55,18 +29,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async (organizationName): Promise<void> => {
     set({ loading: true });
     try {
-      const url = organizationName ? `/v1/organizations/${organizationName}/users/logout` : '/v1/users/logout';
-      await axios.put(url); // withCredentials is global
+      const url = `/v1/organizations/${organizationName}/users/logout`;
+      await axios.put(url);
     } finally {
       set({ user: null, loading: false, hasCheckedAuth: true });
     }
   },
-  // Login function that handles both organization-specific and global login
   login: async (username, password, organizationName) => {
     set({ loading: true });
     try {
-      const loginUrl = organizationName ? `/v1/organizations/${organizationName}/users/login` : '/v1/users/login';
-      const res = await axios.post(loginUrl, { username, password }); // withCredentials is now global
+      const loginUrl = `/v1/organizations/${organizationName}/users/login`;
+      const res = await axios.post(loginUrl, { username, password });
       set({ user: res.data.user, loading: false, hasCheckedAuth: true });
     } catch (err) {
       set({ user: null, loading: false, hasCheckedAuth: true });
@@ -76,7 +49,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   getMe: async (organizationName) => {
     set({ loading: true });
     try {
-      const url = organizationName ? `/v1/organizations/${organizationName}/users/me` : '/v1/users/me';
+      const url = `/v1/organizations/${organizationName}/users/me`;
       const res = await axios.get(url);
       set({ user: res.data, loading: false, hasCheckedAuth: true });
     } catch {
@@ -86,15 +59,15 @@ export const useAuthStore = create<AuthState>((set) => ({
   request2FACode: async (username, password, organizationName) => {
     try {
       await axios.post(`/v1/organizations/${organizationName}/users/login-2fa`, { username, password });
-      return null;
+      return { error: null };
     } catch (err) {
       if (err instanceof Error) {
-        return err.message || 'Invalid credentials';
+        return { error: err.message || 'Invalid credentials' };
       }
       if (isAxiosError(err) && err.response?.data?.error) {
-        return err.response.data.error;
+        return { error: err.response.data.error };
       }
-      return 'Invalid credentials';
+      return { error: 'Invalid credentials' };
     }
   },
   /**
@@ -109,15 +82,15 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (res.data && res.data.user) {
         set({ user: res.data.user, loading: false });
       }
-      return null;
+      return { error: null };
     } catch (err) {
       if (err instanceof Error) {
-        return err.message || 'Invalid or expired code';
+        return { error: err.message || 'Invalid or expired code' };
       }
       if (isAxiosError(err) && err.response?.data?.error) {
-        return err.response.data.error;
+        return { error: err.response.data.error };
       }
-      return 'Invalid or expired code';
+      return { error: 'Invalid or expired code' };
     }
   },
   updateProfile: async (

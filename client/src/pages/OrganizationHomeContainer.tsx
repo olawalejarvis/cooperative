@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useAuthStore } from '../store/auth';
-import { useUserStore } from '../store/user';
 import { useTransactionStore } from '../store/transaction';
 import { useSortState } from '../hooks/useSortState';
 import OrganizationHomePage from './OrganizationHomePage';
@@ -8,15 +7,14 @@ import { withAuth } from '../components/withAuth';
 
 export function OrganizationHomeContainer() {
   const { user, } = useAuthStore();
-  const { aggregate, loading: userAggLoading, error: userAggError, fetchUserAggregate } = useUserStore();
-  const { transactions, loading: txLoading, error: txError, fetchMyTransactions } = useTransactionStore();
+  const { transactions, aggregate, loading: txLoading, error: txError, fetchMyTransactions, fetchMyTransactionAggregate } = useTransactionStore();
   const { sortBy, sortOrder, handleSortChange } = useSortState('createdAt', 'desc');
 
   useEffect(() => {
     if (user?.id) {
-      fetchUserAggregate(user.id)
+      fetchMyTransactionAggregate(user.id)
     }
-  }, [user?.id, fetchUserAggregate]);
+  }, [user?.id, fetchMyTransactionAggregate]);
 
   useEffect(() => {
     if (user?.id) {
@@ -29,8 +27,6 @@ export function OrganizationHomeContainer() {
     <OrganizationHomePage
       user={user}
       aggregate={aggregate}
-      userAggLoading={userAggLoading}
-      userAggError={userAggError}
       transactions={transactions}
       txLoading={txLoading}
       txError={txError}

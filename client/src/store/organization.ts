@@ -1,18 +1,7 @@
 import { create } from 'zustand';
-import axios from '../api/axios';
-
-export interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email?: string;
-  phoneNumber?: string;
-  userName?: string;
-  isActive: boolean;
-  deleted: boolean;
-  role: string;
-}
-
+import { axiosInstance as axios, isAxiosError } from '../api/axios';
+import { useAuthStore } from './auth';
+import type { User } from './user';
 export interface Organization {
   id: string;
   name: string;
@@ -24,16 +13,16 @@ export interface Organization {
   createdAt: string;
   updatedAt: string;
   createdBy?: User;
+  updatedBy?: User;
 }
 
-interface RegisterUserInput {
+export interface RegisterUserInput {
   firstName: string;
   lastName: string;
   userName: string;
   email: string;
   password: string;
   phoneNumber: string;
-  orgName?: string;
 }
 
 interface OrganizationState {
@@ -41,16 +30,17 @@ interface OrganizationState {
   loading: boolean;
   error: string | null;
   setOrganization: (org: Organization) => void;
-  fetchOrganization: (organizationName: string) => Promise<void>;
+  fetchCurrentOrganization: (organizationName: string) => Promise<void>;
+  fetchOrganizationByName: (organizationName: string) => Promise<Organization | { error: string }>;
   clearOrganization: () => void;
-  registerUser: (input: RegisterUserInput) => Promise<void>;
-  updateOrganization: (organizationName: string, label: string, name?: string, description?: string) => Promise<void>;
-  deleteUser: (orgName: string, userId: string) => Promise<void>;
-  setUserActive: (orgName: string, userId: string, isActive: boolean) => Promise<void>;
+  registerOrganizationUser: (input: RegisterUserInput, orgName: string) => Promise<{ error: string | null } | void>;
+  updateOrganization: (organizationName: string, label: string, name?: string, description?: string) => Promise<{ error: string | null } | void>;
+  deleteOrganizationUser: (orgName: string, userId: string) => Promise<{ error: string | null } | void>;
+  setOrganizationUserActive: (orgName: string, userId: string, isActive: boolean) => Promise<{ error: string | null } | void>;
   fetchOrganizations: (params: { q?: string; sortBy?: string; sortOrder?: string; page?: number; limit?: number }) => Promise<Organization[]>;
-  deactivateOrganization: (organizationName: string) => Promise<void>;
-  deleteOrganization: (organizationName: string) => Promise<void>;
-  createOrganization: (data: Partial<Organization>) => Promise<void>;
+  deactivateOrganization: (organizationName: string) => Promise<{ error: string | null } | void>;
+  deleteOrganization: (organizationName: string) => Promise<{ error: string | null } | void>;
+  createOrganization: (data: Partial<Organization>) => Promise<{ error: string | null } | void>;
 }
 
 export const useOrganizationStore = create<OrganizationState>((set) => ({
@@ -59,44 +49,97 @@ export const useOrganizationStore = create<OrganizationState>((set) => ({
   error: null,
   setOrganization: (org) => set({ organization: org }),
   clearOrganization: () => set({ organization: null, error: null }),
-  fetchOrganization: async (organizationName: string) => {
+  fetchCurrentOrganization: async (organizationName: string) => {
     set({ loading: true, error: null });
     try {
       const res = await axios.get(`/v1/organizations/${organizationName}`);
       set({ organization: res.data.organization, loading: false });
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        set({ error: err.response?.data?.error || err.message, loading: false });
+      if (isAxiosError(err) && err.response?.data?.error) {
+        set({ error: err.response?.data?.error, loading: false });
       } else {
         set({ error: 'Unknown error', loading: false });
       }
     }
   },
-  registerUser: async (input) => {
-    const { orgName, ...userData } = input;
-    const url = orgName
-      ? `/v1/organizations/${orgName}/users/register`
-      : '/v1/users/register';
-    await axios.post(url, userData);
+  fetchOrganizationByName: async (organizationName: string) => {
+    try {
+      const res = await axios.get(`/v1/organizations/${organizationName}`);
+      return res.data.organization;
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.error) {
+        return { error: err.response.data.error };
+      } else {
+        return { error: 'Unknown error occurred while fetching organization' };
+      }
+    }
+  },
+  registerOrganizationUser: async (input, orgName) => {
+    const userData = input;
+    const url = `/v1/organizations/${orgName}/users/register`;
+    try {
+      await axios.post(url, userData);
+      return { error: null };
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.error) {
+        return { error: err.response.data.error };
+      } else {
+        return { error: 'Unknown error occurred while registering user' };
+      }
+    }
   },
   updateOrganization: async (
     organizationName: string,
-    label: string,
+    label?: string,
     name?: string,
     description?: string
   ) => {
     try {
       await axios.put(`/v1/organizations/${organizationName}`, { label, name, description });
-      // Optionally update organization in parent/global state if needed
+      return { error: null };
     } catch (err) {
-      throw err;
+      if (isAxiosError(err) && err.response?.data?.error) {
+        return { error: err.response.data.error };
+      } else {
+        return { error: 'Unknown error occurred while updating organization' };
+      }
     }
   },
-  deleteUser: async (orgName: string, userId: string) => {
-    await axios.delete(`/v1/organizations/${orgName}/users/${userId}`);
+  deleteOrganizationUser: async (orgName: string, userId: string) => {
+    try {
+      // Check if the user is trying to delete themselves
+      const currentUserId = useAuthStore.getState().user?.id;
+      if (currentUserId === userId) {
+        return { error: 'You cannot delete yourself from the organization'};
+      }
+      await axios.delete(`/v1/organizations/${orgName}/users/${userId}`);
+      return { error: null };
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.error) {
+        return { error: err.response.data.error };
+      } else {
+        return { error: 'Unknown error occurred while deleting user' };
+      }
+    }
   },
-  setUserActive: async (orgName: string, userId: string, isActive: boolean) => {
-    await axios.patch(`/v1/organizations/${orgName}/users/${userId}/status`, { isActive });
+  setOrganizationUserActive: async (orgName: string, userId: string, isActive: boolean) => {
+    try {
+      // Check if the user is trying to deactivate themselves
+      const currentUserId = useAuthStore.getState().user?.id;
+      if (currentUserId === userId && !isActive) {
+        return { error: 'You cannot deactivate yourself from the organization'};
+      }
+      const url = `/v1/organizations/${orgName}/users/${userId}`;
+      await axios.patch(url, { isActive });
+      return { error: null };
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.error) {
+        return { error: err.response.data.error };
+      }
+      else {
+        return { error: 'Unknown error occurred while updating user status' };
+      }
+    }
   },
   fetchOrganizations: async (params = {}) => {
     set({ loading: true, error: null });
@@ -105,22 +148,46 @@ export const useOrganizationStore = create<OrganizationState>((set) => ({
       set({ loading: false });
       return res.data.data || [];
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        set({ error: err.response?.data?.error || err.message, loading: false });
+      if (isAxiosError(err)) {
+        set({ error: err.response?.data?.error || 'Unknown error', loading: false });
       } else {
         set({ error: 'Unknown error', loading: false });
       }
-      return [];
+      return { error: 'Failed to fetch organizations' };
     }
   },
   deactivateOrganization: async (organizationName: string) => {
-    await axios.patch(`/v1/organizations/${organizationName}`, { isActive: false });
+    try {
+      await axios.patch(`/v1/organizations/${organizationName}`, { isActive: false });
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.error) {
+        return { error: err.response.data.error };
+      } else {
+        return { error: 'Unknown error occurred while deactivating organization' };
+      }
+    }
   },
   deleteOrganization: async (organizationName: string) => {
-    await axios.delete(`/v1/organizations/${organizationName}`);
+    try {
+      await axios.delete(`/v1/organizations/${organizationName}`);
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.error) {
+        return { error: err.response.data.error };
+      } else {
+        return { error: 'Unknown error occurred while deleting organization' };
+      }
+    }
   },
   createOrganization: async (data: Partial<Organization>) => {
-    await axios.post('/v1/organizations', data);
-    // Optionally, refetch or update the organizations in state
+    try {
+      await axios.post('/v1/organizations', data);
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.error) {
+        return { error: err.response.data.error };
+      }
+      else {
+        return { error: 'Unknown error occurred while creating organization' };
+      }
+    }
   },
 }));

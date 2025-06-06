@@ -6,6 +6,11 @@ export const TRANSACTION_METHODS = [
   { value: 'paystack', label: 'Paystack' },
 ];
 
+
+export type TransactionMethods = typeof TRANSACTION_METHODS[keyof typeof TRANSACTION_METHODS];
+export type TransactionStatuses = typeof TRANSACTION_STATUSES[keyof typeof TRANSACTION_STATUSES];
+export type TransactionTypes = typeof TRANSACTION_TYPES[keyof typeof TRANSACTION_TYPES];
+
 export const TRANSACTION_STATUSES = [
   { value: '', label: 'All Statuses' },
   { value: 'pending', label: 'Pending' },

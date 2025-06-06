@@ -1,10 +1,10 @@
 import React from 'react';
 import { Spinner, Alert } from 'react-bootstrap';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts';
-import type { UserAggregate } from '../store/user';
+import type { TransactionAggregate } from '../store/transaction';
 
 interface DashboardSummaryProps {
-  aggregate: UserAggregate | null;
+  aggregate: TransactionAggregate | null;
   userAggLoading: boolean;
   userAggError: string | null | undefined;
   avgDeposit: number;

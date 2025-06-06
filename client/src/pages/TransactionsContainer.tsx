@@ -4,7 +4,7 @@ import { useTransactionStore } from '../store/transaction';
 import { useSortState } from '../hooks/useSortState';
 import TransactionsPage from './TransactionsPage';
 import TransactionModal from '../components/TransactionModal';
-import type { Transaction, TransactionPage } from '../store/transaction';
+import type { Transaction, TransactionPageResult } from '../store/transaction';
 import { withAuth } from '../components/withAuth';
 
 export function TransactionsContainer() {
@@ -30,15 +30,15 @@ export function TransactionsContainer() {
       setAllTransactions([]);
       isInitialLoad.current = true;
       setLoadingMore(true);
-      let result: TransactionPage | undefined;
+      let result: TransactionPageResult;
       if (filter === 'my') {
         result = await fetchMyTransactions({ sortBy, sortOrder, limit: 20, page: 1 });
       } else {
         result = await fetchAllTransactions({ sortBy, sortOrder, limit: 20, page: 1 });
       }
       if (!ignore) {
-        setAllTransactions(result?.data || []);
-        setTotalPages(result?.totalPages || 1);
+        setAllTransactions(result.data?.transactions || []);
+        setTotalPages(result?.data?.totalPages || 1);
         setLoadingMore(false);
       }
     }
@@ -55,15 +55,15 @@ export function TransactionsContainer() {
     let ignore = false;
     async function loadMore() {
       setLoadingMore(true);
-      let result: TransactionPage | undefined;
+      let result: TransactionPageResult;
       if (filter === 'my') {
         result = await fetchMyTransactions({ sortBy, sortOrder, limit: 20, page });
       } else {
         result = await fetchAllTransactions({ sortBy, sortOrder, limit: 20, page });
       }
       if (!ignore) {
-        setAllTransactions(prev => [...prev, ...(result?.data || [])]);
-        setTotalPages(result?.totalPages || totalPages);
+        setAllTransactions(prev => [...prev, ...(result?.data?.transactions || [])]);
+        setTotalPages(result?.data?.totalPages || totalPages);
         setLoadingMore(false);
       }
     }

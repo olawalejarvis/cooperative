@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import type { User } from '../store/organization';
 import { UserPermission } from '../utils/UserPermission';
 import { Button } from 'react-bootstrap';
 import { useOrganizationStore } from '../store/organization';
@@ -7,7 +6,7 @@ import { CATable } from '../components/CATable';
 import type { TableColumn } from '../components/CATable';
 import { useAuthStore } from '../store/auth';
 import { CAModal } from '../components/CAModal';
-import { useUserStore } from '../store/user';
+import { useUserStore, type User } from '../store/user';
 import './OrgUsersPage.css';
 
 interface OrgUsersPageProps {
@@ -61,9 +60,9 @@ const OrgUsersPage: React.FC<OrgUsersPageProps> = ({
   const handleConfirm = async () => {
     if (!modalUser || !orgName) return;
     if (modalAction === 'delete') {
-      await organizationStore.deleteUser(orgName, modalUser.id);
+      await organizationStore.deleteOrganizationUser(orgName, modalUser.id);
     } else if (modalAction === 'deactivate') {
-      await organizationStore.setUserActive(orgName, modalUser.id, !modalUser.isActive);
+      await organizationStore.setOrganizationUserActive(orgName, modalUser.id, !modalUser.isActive);
     }
     setShowModal(false);
   };
@@ -102,11 +101,11 @@ const OrgUsersPage: React.FC<OrgUsersPageProps> = ({
         setCreateLoading(false);
         return;
       }
-      await organizationStore.registerUser({ ...createForm, orgName });
+      await organizationStore.registerOrganizationUser(createForm, orgName);
       setShowCreateModal(false);
       setCreateForm({ firstName: '', lastName: '', userName: '', email: '', password: '', phoneNumber: '', role: 'user' });
       // Refresh user list
-      if (orgName) await userStore.fetchOrgUsers(orgName, sortBy, sortOrder);
+      if (orgName) await userStore.fetchOrgUsers(orgName, { sortBy, sortOrder });
     } catch (err: unknown) {
       if (err instanceof Error) setCreateError(err.message);
       else setCreateError('Failed to create user');

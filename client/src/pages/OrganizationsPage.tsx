@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { CATable } from '../components/CATable';
 import { CAModal } from '../components/CAModal';
 import { Button } from 'react-bootstrap';
-import type { Organization, User } from '../store/organization';
+import type { Organization } from '../store/organization';
 import { useOrganizationStore } from '../store/organization';
 import OrganizationProfile from '../components/OrganizationProfile';
 import { useAuthStore } from '../store/auth';
 import { UserPermission } from '../utils/UserPermission';
 import './OrganizationsPage.css';
+import type { User } from '../store/user';
 
 interface OrganizationsPageProps {
   organizations: Record<string, unknown>[];

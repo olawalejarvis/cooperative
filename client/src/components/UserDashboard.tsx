@@ -2,17 +2,14 @@ import { Button } from 'react-bootstrap';
 import TransactionTable from '../components/TransactionTable';
 import DashboardSummary from '../components/DashboardSummary';
 import TransactionModal from '../components/TransactionModal';
-import type { Transaction } from '../store/transaction';
-import type { UserAggregate } from '../store/user';
+import type { Transaction, TransactionAggregate } from '../store/transaction';
 import type { SortOrder } from '../types';
 import { useNavigate, useParams } from 'react-router-dom';
 import React from 'react';
 import { useTransactionStore } from '../store/transaction';
 
-function UserDashboard({ userAggLoading, userAggError, aggregate, transactions, txLoading, txError, sortBy, sortOrder, handleSortChange }: {
-  userAggLoading: boolean,
-  userAggError: string | null | undefined,
-  aggregate: UserAggregate | null,
+function UserDashboard({ aggregate, transactions, txLoading, txError, sortBy, sortOrder, handleSortChange }: {
+  aggregate: TransactionAggregate | null,
   transactions: Transaction[],
   txLoading: boolean,
   txError: string | null | undefined,
@@ -72,8 +69,8 @@ function UserDashboard({ userAggLoading, userAggError, aggregate, transactions, 
     <div className="mb-3" style={{ minWidth: 0 }}>
       <DashboardSummary
         aggregate={aggregate}
-        userAggLoading={userAggLoading}
-        userAggError={userAggError}
+        userAggLoading={txLoading}
+        userAggError={txError}
         avgDeposit={avgDeposit}
         totalDeposits={totalDeposits}
         totalTxCount={totalTxCount}
