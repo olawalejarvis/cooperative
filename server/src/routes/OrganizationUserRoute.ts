@@ -91,3 +91,5 @@ orgUserRouter.put('/:organizationName/users/:userId/role',
   orgUserController.updateUserRoleForOrganization
 );
 
+
+export { orgUserRouter };

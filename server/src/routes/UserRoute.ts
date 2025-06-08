@@ -6,7 +6,10 @@ import { rootAuthenticateToken } from '../middleware/rootUserAuthorization';
 const userRouter = Router();
 const userController = new UserController();
 
-userRouter.get('/', rootAuthenticateToken, adminAuthorization, userController.searchUsers);
-
+userRouter.get('/',
+  rootAuthenticateToken,
+  adminAuthorization,
+  userController.searchUsers
+);
 
 export { userRouter };
