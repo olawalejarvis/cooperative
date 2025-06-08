@@ -1,16 +1,23 @@
 import { z } from 'zod';
 import { AggregatorService } from '../services/AggregatorService';
 import { UserRepo } from '../database/Repos';
-import { TransactionType, TransactionMethod, TransactionStatus } from '../entity/Transaction';
+import { TransactionType, TransactionMethod, TransactionStatus, TransactionSource } from '../entity/Transaction';
 import { Response, NextFunction, AuthRequest } from '../types';
 import { UserRole } from '../entity/User';
 
 
 export const AggregateQuerySchema = z.object({
   aggregationType: z.enum(['SUM', 'AVG', 'COUNT']).optional().default('SUM'),
-  transactionType: z.nativeEnum(TransactionType).optional(),
+  amountRange: z
+    .object({
+      min: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Minimum amount must be a valid number with up to 2 decimal places').optional(),
+      max: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Maximum amount must be a valid number with up to 2 decimal places').optional()
+    })
+    .optional(),
+  transactionType: z.nativeEnum(TransactionType).optional().default(TransactionType.CONTRIBUTIONS),
   transactionMethod: z.nativeEnum(TransactionMethod).optional(),
   transactionStatus: z.nativeEnum(TransactionStatus).optional().default(TransactionStatus.APPROVED),
+  transactionSource: z.nativeEnum(TransactionSource).optional().default(TransactionSource.SAVINGS),
   deleted: z.boolean().optional().default(false),
   // dateRange is an object with optional from and to datetime strings
   dateRange: z
@@ -18,13 +25,11 @@ export const AggregateQuerySchema = z.object({
       from: z.string().datetime().optional(),
       to: z.string().datetime().optional(),
     })
-    .optional(),
-  createdBeforeDate: z.string().datetime().optional(),
-  createdAfterDate: z.string().datetime().optional(),
+    .optional()
 });
 
 export type AggregateQuery = z.infer<typeof AggregateQuerySchema>;
-export type AggregationType = 'SUM' | 'AVG';
+export type AggregationType = 'SUM' | 'AVG' | 'COUNT';
 
 
 /**
@@ -58,12 +63,12 @@ export class AggregatorController {
       }
       
       // Ensure the user is part of the same organization if not ROOT_USER
-      if (user.organization?.id !== req.user?.orgId && !UserRole.isRootUser(req.user?.userRole)) {
+      if (user.organization?.id !== req.user?.orgId) {
         return res.status(403).json({ error: 'Forbidden: You do not have permission to access this user\'s transactions' });
       }
 
       // Aggregate user transactions
-      const aggregate = await AggregatorService.aggregateUserTransactions(userId, parseResult.data);
+      const aggregate = await AggregatorService.aggregateUserTransactions(parseResult.data, user.organization.id, userId);
       return res.status(200).json(aggregate);
     } catch (err) {
       next(err);

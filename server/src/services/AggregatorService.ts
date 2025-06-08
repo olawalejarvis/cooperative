@@ -1,24 +1,35 @@
-import { UserTransactionRepo } from '../database/Repos';
+import { TransactionRepo } from '../database/Repos';
 import { AggregateQuery } from '../controllers/AggregatorController';
 
 export class AggregatorService {
-  static async aggregateUserTransactions(userId: string, query: AggregateQuery) {
+  static async aggregateUserTransactions(query: AggregateQuery, orgId: string, userId?: string) {
     const {
       aggregationType,
       transactionType,
       transactionMethod,
       transactionStatus,
+      transactionSource,
       deleted,
       dateRange,
-      createdBeforeDate,
-      createdAfterDate,
+      amountRange
     } = query;
 
-    const qb = UserTransactionRepo.createQueryBuilder('tx')
+    const qb = TransactionRepo.createQueryBuilder('tx')
       .select(`${aggregationType}(tx.amount)`, 'aggregate')
       .addSelect('COUNT(tx.id)', 'count')
-      .where('tx.user_id = :userId', { userId })
       .andWhere('tx.deleted = :deleted', { deleted })
+
+    if (userId) {
+      qb.andWhere('tx.user_id = :userId', { userId });
+    }
+
+    if (orgId) {
+      qb.andWhere('tx.organization_id = :orgId', { orgId });
+    }
+
+    if (transactionSource) {
+      qb.andWhere('tx.source = :transactionSource', { transactionSource });
+    }
 
     if (transactionType) {
       qb.andWhere('tx.type = :transactionType', { transactionType });
@@ -37,11 +48,13 @@ export class AggregatorService {
         qb.andWhere('tx.created_at <= :to', { to: dateRange.to });
       }
     }
-    if (createdBeforeDate) {
-      qb.andWhere('tx.created_at <= :createdBeforeDate', { createdBeforeDate });
-    }
-    if (createdAfterDate) {
-      qb.andWhere('tx.created_at >= :createdAfterDate', { createdAfterDate });
+    if (amountRange) {
+      if (amountRange.min) {
+        qb.andWhere('tx.amount >= :min', { min: parseFloat(amountRange.min) });
+      }
+      if (amountRange.max) {
+        qb.andWhere('tx.amount <= :max', { max: parseFloat(amountRange.max) });
+      }
     }
 
     const rawResult = await qb.getRawOne();

@@ -4,6 +4,7 @@ import sgMail from '@sendgrid/mail';
 import nodemailer from 'nodemailer';
 import { User } from '../entity/User';
 import { Organization } from '../entity/Organization';
+import { Transaction } from '../entity/Transaction';
 
 export class NotificationService {
   private static instance: NotificationService;
@@ -186,6 +187,65 @@ export class NotificationService {
     `;
     const subject = 'Your Coop App 2FA Code';
     await this.sendEmail(user.email, subject, emailBody)
+  }
+
+  /**
+   * Notify an admin when a transaction is created and pending approval.
+   * @param adminUser The admin to notify
+   * @param transaction The transaction awaiting approval
+   * @param transactionLink Direct link to the transaction approval page
+   */
+  async sendTransactionApprovalRequestEmail(adminUser: User, transaction: Transaction, transactionLink: string): Promise<void> {
+    const orgLabel = transaction.organization?.label || transaction.organization?.name || 'your cooperative';
+    const userName = transaction.user?.firstName || transaction.user?.userName || 'A user';
+    const amount = transaction.amount;
+    const type = transaction.type;
+    const createdAt = transaction.createdAt ? new Date(transaction.createdAt).toLocaleString() : '';
+    const emailBody = `
+      Hello ${adminUser.firstName || adminUser.userName || 'Admin'},
+
+      A new transaction has been created and is pending your approval in ${orgLabel}.
+
+      Transaction details:
+      - User: ${userName}
+      - Amount: ${amount}
+      - Type: ${type}
+      - Created At: ${createdAt}
+
+      You can review and approve or reject this transaction directly using the link below:
+      ${transactionLink}
+
+      Or review all pending transactions in your admin dashboard.
+
+      Thank you,
+      Coop App System
+    `;
+    const subject = 'Transaction Approval Needed';
+    await this.sendEmail(adminUser.email, subject, emailBody);
+  }
+
+  /**
+   * Sends an email to the user when their transaction is approved by an admin.
+   * This email informs the user that their transaction has been approved and provides details.
+   * @param user 
+   * @param transaction 
+   */
+  async sendTransactionApprovalEmail(user: User, transaction: Transaction): Promise<void> {
+    const orgLabel = transaction.organization?.label || transaction.organization?.name || 'your cooperative';
+    const emailBody = `
+      Hello ${user.firstName || user.userName || ''},
+
+      Your transaction (ID: ${transaction.id}) in ${orgLabel} has been approved by an admin.
+
+      Amount: ${transaction.amount}
+      Type: ${transaction.type}
+      Approved At: ${(new Date()).toLocaleString()}
+
+      Thank you,
+      Coop App System
+    `;
+    const subject = 'Your Transaction Has Been Approved';
+    await this.sendEmail(user.email, subject, emailBody);
   }
 
 }

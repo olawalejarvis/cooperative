@@ -4,6 +4,7 @@ import { getLogger } from '../services/logger';
 import { Response, NextFunction, AuthRequest } from '../types';
 
 const logger = getLogger('middleware/authenticateToken');
+
 /**
  * Middleware to authenticate user token.
  * It checks for a valid JWT token in the request headers or cookies,

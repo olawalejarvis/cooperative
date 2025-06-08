@@ -98,7 +98,7 @@ export class User {
 
   @OneToOne(() => Organization, { nullable: true })
   @JoinColumn({ name: 'organization_id' })
-  organization?: Organization;
+  organization!: Organization;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: string;

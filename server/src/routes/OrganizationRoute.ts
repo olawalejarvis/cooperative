@@ -5,7 +5,7 @@
 import { Router } from 'express';
 import { OrganizationController } from '../controllers/OrganizationController';
 import { authenticateToken } from '../middleware/authenticateToken';
-import { rootAuthenticateToken, rootUserAuthorization } from '../middleware/rootUserAuthorization';
+import { rootAuthenticateToken } from '../middleware/rootUserAuthorization';
 import { adminAuthorization } from '../middleware/adminAuthorization';
 
 const organizationRouter = Router();
