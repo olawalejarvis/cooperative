@@ -19,6 +19,9 @@ export class OrganizationService {
     
     if (params.q) {
       qb.where('LOWER(organization.name) LIKE :q', { q: `%${params.q.toLowerCase()}%` });
+      qb.orWhere('LOWER(organization.label) LIKE :q', { q: `%${params.q.toLowerCase()}%` });
+      qb.orWhere('LOWER(organization.description) LIKE :q', { q: `%${params.q.toLowerCase()}%` });
+      qb.orWhere('LOWER(organization.aimAndObjective) LIKE :q', { q: `%${params.q.toLowerCase()}%` });
     }
     
     qb.orderBy(`organization.${params.sortBy}`, params.sortOrder.toUpperCase() as 'ASC' | 'DESC')

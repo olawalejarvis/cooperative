@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { AggregatorService } from '../services/AggregatorService';
 import { UserRepo } from '../database/Repos';
-import { TransactionType, TransactionMethod, TransactionStatus } from '../entity/UserTransaction';
+import { TransactionType, TransactionMethod, TransactionStatus } from '../entity/Transaction';
 import { Response, NextFunction, AuthRequest } from '../types';
 import { UserRole } from '../entity/User';
 

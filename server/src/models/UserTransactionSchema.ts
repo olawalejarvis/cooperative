@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TransactionMethod, TransactionStatus, TransactionType } from '../entity/UserTransaction';
+import { TransactionMethod, TransactionStatus, TransactionType } from '../entity/Transaction';
 
 export const CreateUserTransactionSchema = z.object({
   amount: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Amount must be a valid number with up to 2 decimal places'),

@@ -3,7 +3,7 @@ import { getLogger } from '../services/logger';
 import { CreateUserTransactionSchema } from '../models/UserTransactionSchema';
 import { OrganizationRepo, UserRepo, UserTransactionRepo } from '../database/Repos';
 import { UserRole } from '../entity/User';
-import { TransactionStatus } from '../entity/UserTransaction';
+import { TransactionStatus } from '../entity/Transaction';
 import { z } from 'zod';
 import { UserTransactionService } from '../services/UserTransactionService';
 

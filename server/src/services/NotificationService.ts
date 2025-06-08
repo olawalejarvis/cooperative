@@ -2,6 +2,8 @@ import { getLogger } from './logger';
 import axios from 'axios';
 import sgMail from '@sendgrid/mail';
 import nodemailer from 'nodemailer';
+import { User } from '../entity/User';
+import { Organization } from '../entity/Organization';
 
 export class NotificationService {
   private static instance: NotificationService;
@@ -120,6 +122,70 @@ export class NotificationService {
       this.logger.error(`Failed to send email (Nodemailer) to ${email}: ${error}`);
       throw new Error(`Failed to send email (Nodemailer): ${error}`);
     }
+  }
+
+  async sendAccountVerificationEmail(user: User, verificationLink: string, orgLabel?: string): Promise<void> {
+    // send email to verify account to user
+    const emailBody = `
+      Hello ${user.firstName || user.userName || ''},
+
+      Welcome to ${orgLabel} Cooperative Society!
+
+      Please verify your account by clicking the link below:
+
+          ${verificationLink}
+
+      If you did not request this account, please ignore this email.
+
+      Thank you,
+      ${orgLabel} Team
+    `;
+    const subject = 'Verify your Cooperative Account';
+    await this.sendEmail(user.email, subject, emailBody);
+  }
+
+  async sendGuestAccountApprovalEmail(adminUser: User, guestUser: User, organization: Organization, activationUrl: string): Promise<void> {
+    const emailBody = `
+      Hello Admin,
+
+      A new user has requested to join your cooperative (${organization.label || organization.name}).
+
+      User details:
+      Name: ${guestUser.firstName || ''} ${guestUser.lastName || ''}
+      Username: ${guestUser.userName || ''}
+      Email: ${guestUser.email || ''}
+      Phone: ${guestUser.phoneNumber || ''}
+
+      To approve and activate this user, click the link below:
+
+          ${activationUrl}
+
+      Or review and approve this registration in your admin dashboard.
+
+      Thank you,
+      Coop App System
+    `;
+    const subject = 'New User Registration Request - Approval Needed';
+    await this.sendEmail(adminUser.email, subject, emailBody);
+  }
+
+  async send2FaAuthenticationCode(user: User, organization: Organization, code: string) {
+    const emailBody = `
+      Hello ${user.firstName || ''},
+
+      We received a request to log in to your Coop App account for organization "${organization.label}".
+
+      Your One-Time Password (OTP) for login is:
+
+          ${code}
+
+      This code is valid for 5 minutes. If you did not request this code, please ignore this email or contact support immediately.
+
+      Thank you,
+      Coop App Security Team
+    `;
+    const subject = 'Your Coop App 2FA Code';
+    await this.sendEmail(user.email, subject, emailBody)
   }
 
 }

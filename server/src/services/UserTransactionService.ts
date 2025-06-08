@@ -1,5 +1,5 @@
 import { TransactionQuery } from '../controllers/UserTransactionController';
-import { UserTransactionRepo } from '../database/Repos';
+import { TransactionRepo } from '../database/Repos';
 
 
 export interface SearchResult {

@@ -1,9 +1,67 @@
+import { UserRepo } from '../database/Repos';
 import { UserRole } from '../entity/User';
+import { JwtTokenService } from '../services/JwtTokenService';
+import { getLogger } from '../services/logger';
 import { AuthRequest, Response, NextFunction } from '../types';
+
+const logger = getLogger('middleware/authenticateToken');
 
 export function rootUserAuthorization(req: AuthRequest, res: Response, next: NextFunction) {
   if (UserRole.isRootUser(req.user?.userRole)) {
     return next();
   }
   return res.status(403).json({ error: 'Forbidden: Root user only.' });
+}
+
+/**
+ * Middleware to authenticate root user token.
+ * It checks for a valid JWT token in the request headers or cookies,
+ * verifies it, and attaches user information to the request object.
+ * @param req
+ * @param res
+ * @param next
+ */
+export async function rootAuthenticateToken(req: AuthRequest, res: Response, next: NextFunction) {
+  const token = req.cookies?.token || req.headers['authorization']?.split(' ')[1] || req.headers.cookie?.split('; ')?.find(row => row.startsWith('token='))?.split('=')[1];
+  if (!token) {
+    return res.status(401).json({ error: 'Access denied. No token provided.' });
+  }
+  try {
+    const decoded = JwtTokenService.verifyToken(token);
+    if (!decoded) {
+      return res.status(401).json({ error: 'Invalid token.' });
+    }
+    
+    // Find user by ID from the decoded token
+    const user = await UserRepo.findOne({ where: { id: decoded.userId, isActive: true, deleted: false }, relations: ['organization'] });
+  
+    if (!user || !user.organization?.isActive || user.organization?.deleted || user.organization?.name !== 'root') {
+      return res.status(401).json({ error: 'Invalid token.' });
+    }
+
+    if (!user.isVerified) {
+      return res.status(403).json({ error: 'User is not verified., please check your email to verify your account' });
+    }
+
+    // Check if user is valid and token matches the one stored in the user's table
+    if (!user.token || user.token !== token) {
+      // return res.status(401).json({ error: 'Invalid token.' });
+    }
+    
+    // Attach user data to request object
+    req.user = {
+      userId: user.id,
+      userRole: user.role,
+      orgId: user.organization.id,
+      orgName: user.organization.name,
+      orgLabel: user.organization.label
+    };
+
+    logger.info(`Authenticated user: ${req.user.userId} with role: ${req.user.userRole} and orgId: ${req.user.orgId}`);
+
+    // Proceed to the next middleware or route handler 
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid or expired token.' });
+  }
 }

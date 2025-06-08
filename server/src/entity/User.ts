@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert, BeforeUpdate, OneToOne, JoinColumn, Repository } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert, BeforeUpdate, OneToOne, JoinColumn, Repository, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Organization } from './Organization';
 
@@ -6,12 +6,12 @@ export enum UserRole  {
   USER = 'user',
   ADMIN = 'admin',
   SUPERADMIN = 'superadmin',
-  ROOT_USER = 'root_user'
+  ROOT = 'root'
 }
 
 export namespace UserRole {
   export function isRootUser(role?: string): boolean {
-    return role === UserRole.ROOT_USER;
+    return role === UserRole.ROOT;
   }
   export function isSuperAdmin(role?: string): boolean {
     return role === UserRole.SUPERADMIN || isRootUser(role);
@@ -24,7 +24,22 @@ export namespace UserRole {
   }
 }
 
+export interface UserPreferences {
+  smsNotification?: boolean;
+  emailNotification?: boolean;
+  hideTotalContributions?: boolean;
+  hideLoanTotal?: boolean;
+  hideSharesTotal?: boolean;
+  [key: string]: any; // Allow additional properties
+  // This allows for flexibility in user preferences
+  // while still maintaining type safety for known properties.
+}
 
+
+/**
+ * Represents a user entity in the system.
+ * Users can have different roles and are associated with an organization.
+ */
 @Entity({ name: 'user' })
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -36,8 +51,8 @@ export class User {
   @Column({ name: 'last_name' })
   lastName!: string;
 
-  @Column({ unique: true, nullable: true })
-  email?: string;
+  @Column({ unique: true, nullable: false })
+  email!: string;
 
   @Column({ name: 'phone_number', unique: true })
   phoneNumber!: string;
@@ -48,7 +63,7 @@ export class User {
   @Column({ name: 'password_hash' })
   passwordHash!: string;
 
-  @Column({ name: 'is_active', default: true })
+  @Column({ name: 'is_active', default: false })
   isActive!: boolean;
 
   @Column({ default: false })
@@ -68,14 +83,27 @@ export class User {
   @JoinColumn({ name: 'updated_by' })
   updatedBy!: User;
 
+  @OneToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'activated_by' })
+  activatedBy!: User;
+
+  @Column({ name: 'activated_at', type: 'timestamp', nullable: true })
+  activatedAt!: Date;
+
+  @Column({ name: 'verified_at', type: 'timestamp', nullable: true })
+  verifiedAt!: Date;
+
+  @Column({ name: 'is_verified', default: false })
+  isVerified?: boolean;
+
   @OneToOne(() => Organization, { nullable: true })
   @JoinColumn({ name: 'organization_id' })
   organization?: Organization;
 
-  @Column({ name: 'created_at' })
+  @CreateDateColumn({ name: 'created_at' })
   createdAt!: string;
 
-  @Column({ name: 'updated_at' })
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: string;
 
   @Column({ name: 'token', nullable: true })
@@ -86,6 +114,15 @@ export class User {
 
   @Column({ name: 'code_expires_at', type: 'timestamp', nullable: true })
   codeExpiresAt?: Date;
+
+  @Column({ name: 'preferences', type: 'json', nullable: true })
+  preferences?: UserPreferences = {
+    smsNotification: true,
+    emailNotification: true,
+    hideTotalContributions: false,
+    hideLoanTotal: false,
+    hideSharesTotal: false,
+  };
 
 
   /**
@@ -100,10 +137,9 @@ export class User {
    */
   @BeforeInsert()
   beforeInsert() {
-    const now = new Date().toISOString();
-    this.createdAt = now;
-    this.updatedAt = now;
-    this.hashPassword();
+    if (this.password) {
+      this.hashPassword();
+    }
   }
 
   @BeforeUpdate()
@@ -122,11 +158,19 @@ export class User {
     }
   }
 
-
+  /**
+   * Hashes the password using bcrypt before saving to the database.
+   * This method is called in the BeforeInsert and BeforeUpdate hooks.
+   */
   hashPassword() {
     this.passwordHash = bcrypt.hashSync(this.password, bcrypt.genSaltSync(10));
   }
 
+  /**
+   * Validates the provided password against the stored password hash.
+   * @param password The plain text password to validate.
+   * @returns True if the password is valid, false otherwise.
+   */
   isValidPassword(password: string): boolean {
     return bcrypt.compareSync(password, this.passwordHash);
   }

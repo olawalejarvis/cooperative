@@ -5,6 +5,8 @@ export interface AuthUser {
   userId: string;
   userRole: string;
   orgId?: string;
+  orgName?: string;
+  orgLabel?: string;
 }
 
 const logger = getLogger('services/JwtTokenService');
@@ -33,6 +35,28 @@ export class JwtTokenService {
       
       if (typeof decoded === 'object' && 'userId' in decoded && 'userRole' in decoded && 'orgId' in decoded) {
         return decoded as AuthUser; // Return the decoded payload if it matches the expected structure
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  static verifyAccountVerificationToken(token: string) {
+    try {
+      const secret = process.env.JWT_SECRET as string;
+      const decoded = jwt.verify(token, secret, { algorithms: ['HS256'] });
+
+      logger.info(`Decoded JWT: ${JSON.stringify(decoded)}`);
+      
+      if (typeof decoded === 'object' && 'userId' in decoded && 'orgId' in decoded && 'type' in decoded && decoded.type === 'account-verification') {
+        // Ensure the decoded token has the expected structure for account verification
+        if (!decoded.userId || !decoded.orgId) {
+          logger.error('Invalid verification token structure');
+          return null; // Return null if the structure is not as expected
+        }
+        logger.info(`Verification token valid for userId: ${decoded.userId}, orgId: ${decoded.orgId}`);
+        return decoded; // Return the decoded payload if it matches the expected structure
       }
       return null;
     } catch (error) {
@@ -95,6 +119,14 @@ export class JwtTokenService {
   static clearToken(res: any): void {
     this.clearTokenInCookies(res);
     this.clearTokenInHeaders(res);
+  }
+
+  static generateVerificationToken(userId: string, orgId?: string): string {
+    const payload = { userId, orgId, type: 'account-verification' };
+    logger.info(`Generating verification JWT with payload: ${JSON.stringify(payload)}`);
+    const secret = process.env.JWT_SECRET as string;
+    const options: SignOptions = { algorithm: 'HS256' as Algorithm, expiresIn: '1d' }; // Token expires in 1 day
+    return jwt.sign(payload, secret, options);
   }
 
 }

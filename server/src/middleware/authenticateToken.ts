@@ -13,6 +13,7 @@ const logger = getLogger('middleware/authenticateToken');
  * @param next
  */
 export async function authenticateToken(req: AuthRequest, res: Response, next: NextFunction) {
+  const { organizationName } = req.params
   const token = req.cookies?.token || req.headers['authorization']?.split(' ')[1] || req.headers.cookie?.split('; ')?.find(row => row.startsWith('token='))?.split('=')[1];
   if (!token) {
     return res.status(401).json({ error: 'Access denied. No token provided.' });
@@ -25,13 +26,18 @@ export async function authenticateToken(req: AuthRequest, res: Response, next: N
     
     // Find user by ID from the decoded token
     const user = await UserRepo.findOne({ where: { id: decoded.userId, isActive: true, deleted: false }, relations: ['organization'] });
-    
-    if (!user) {
+  
+    // validate user, user organization and ensure params orgName is same as userOrgName
+    if (!user || !user.organization?.isActive || user.organization?.deleted || !organizationName || organizationName != user.organization.name ) {
       return res.status(401).json({ error: 'Invalid token.' });
     }
 
+    if (!user.isVerified) {
+      return res.status(403).json({ error: 'User is not verified., please check your email to verify your account' });
+    }
+
     // Check if user is valid and token matches the one stored in the user's table
-    if (!user || !user.token || user.token !== token) {
+    if (!user.token || user.token !== token) {
       // return res.status(401).json({ error: 'Invalid token.' });
     }
     
@@ -39,7 +45,9 @@ export async function authenticateToken(req: AuthRequest, res: Response, next: N
     req.user = {
       userId: user.id,
       userRole: user.role,
-      orgId: user?.organization?.id,
+      orgId: user.organization.id,
+      orgName: user.organization.name,
+      orgLabel: user.organization.label
     };
 
     logger.info(`Authenticated user: ${req.user.userId} with role: ${req.user.userRole} and orgId: ${req.user.orgId}`);

@@ -9,7 +9,7 @@ export const CreateUserSchema = z.object({
     .min(2)
     .max(50)
     .regex(/^[a-zA-Z\s'-]+$/, 'Last name contains invalid characters'),
-  email: z.string().email().optional().nullable(),
+  email: z.string().email().nullable(),
   phoneNumber: z.string()
     .min(7)
     .max(15)
@@ -19,12 +19,7 @@ export const CreateUserSchema = z.object({
     .max(30)
     .regex(/^[a-zA-Z0-9_.-]+$/, 'Username contains invalid characters')
     .optional()
-    .nullable(),
-  password: z.string()
-    .min(8)
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/, 'Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.'),
-  role: z.enum(['user', 'admin', 'superadmin']).optional(),
-  organizationId: z.string().uuid(),
+    .nullable()
 });
 
 export const LoginUserSchema = z.object({
@@ -48,8 +43,8 @@ export const SearchUsersQuerySchema = z.object({
   page: z.string().regex(/^\d+$/).transform(Number).optional().default('1'),
   sortBy: z.enum(['createdAt', 'firstName', 'lastName']).optional().default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
-  deleted: z.boolean().optional(),
-  isActive: z.boolean().optional(),
+  deleted: z.boolean().optional().default(false),
+  isActive: z.boolean().optional().default(true),
   role: z.enum(['user', 'admin', 'superadmin']).optional(),
   createdBy: z.string().uuid().optional()  
 });
